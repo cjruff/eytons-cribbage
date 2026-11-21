@@ -24,43 +24,62 @@ const now = () => performance.now() / 1000;
  */
 export const LAYOUTS = {
   desktop: {
-    name: "desktop", W: LW, H: LH,
+    name: "desktop", W: LW, H: LH, ts: 1,
     board: { x: 10, y: 10, k: 1 },
     side: { x1: 1145, x2: 1390, top: 14, head: 34, log: true, bottom: 866, ch: { 2: 170, 3: 138 }, pw: null },
     cx: 830, midL: 548, midR: 1132,
     opp: { nameY: 28, y: 48, k: 1, step: { 2: 38, 3: 26 }, anchors: { 2: [830], 3: [720, 1015] }, goY: 112, thinkY: 192 },
-    deck: { x: 552, y: 240, labelY: 384 }, starter: { x: 579, y: 218, labelY: 204 },
+    deck: { x: 552, y: 240, labelY: 384, k: 1 }, starter: { x: 579, y: 218, labelY: 204 },
     crib: { own: [548, 392], k: 0.8, gap: 98, labelDy: 116 },
     discardMsg: { x: 960, y: 300, w: 330 },
-    peg: { x0: 770, y0: 222, box: [880, 372, 1040, 432], countY: 402, restartY: 446, lastX: 945, lastY: 472, lastW: 400 },
-    show: { titleY: 206, x0: 588, y: 232, totalY: 392, ofY: 420, msgY: 506, btnY: 440, btnX: [660, 840] },
-    cut: { titleY: 206, cardY: 238, nameY: 392, spreadL: 548, spreadR: 1128, base: 460, msgY: 640, btnY: 672 },
+    peg: { x0: 770, y0: 222, k: 1, step: 34, box: [880, 372, 1040, 432], countY: 402, restartY: 446, lastX: 945, lastY: 472, lastW: 400 },
+    show: { titleY: 206, x0: 588, y: 232, k: 1, step: 97, totalY: 392, ofY: 420, msgY: 506, btnY: 440, btnX: [660, 840] },
+    cut: { titleY: 206, cardY: 238, k: 1, span: 150, nameY: 392, spreadL: 548, spreadR: 1128, base: 460, msgY: 640, btnY: 672 },
     hand: { y: 598, k: 1, step: 100, lift: 24, promptY: 560, btnY: 750, nameY: 846 },
     dropY: 556, dragRect: [560, 196, 1128, 540], dragTextY: 525,
     breakdown: { x1: 560, x2: 1120, y1: 120, ymin: 500, ymax: 830 },
     gameover: [570, 140, 1110, 700], toast: [600, 8, 1060, 72],
   },
-  phone: {
-    name: "phone", W: 1400, H: 660,
-    board: { x: 4, y: 8, k: 0.75 },
-    side: { x1: 1176, x2: 1394, top: 6, head: 30, log: false, bottom: 654, ch: { 2: 300, 3: 203 }, pw: 110, ph: 141 },
-    cx: 776, midL: 386, midR: 1166,
-    opp: { nameY: 12, y: 24, k: 0.72, step: { 2: 30, 3: 22 }, anchors: { 2: [800], 3: [690, 975] }, goY: 70, thinkY: 128 },
-    deck: { x: 392, y: 148, labelY: 290 }, starter: { x: 419, y: 130, labelY: 118 },
-    crib: { own: [392, 300], k: 0.55, gap: 70, labelDy: 82 },
-    discardMsg: { x: 900, y: 220, w: 330 },
-    peg: { x0: 600, y0: 130, box: [700, 272, 860, 318], countY: 295, restartY: 328, lastX: 790, lastY: 348, lastW: 480 },
-    show: { titleY: 132, x0: 534, y: 150, totalY: 300, ofY: 324, msgY: 348, btnY: 578, btnX: [606, 786] },
-    cut: { titleY: 134, cardY: 152, nameY: 296, spreadL: 392, spreadR: 1160, base: 340, msgY: 500, btnY: 526 },
-    hand: { y: 400, k: 1.22, step: 120, lift: 14, promptY: 373, btnY: 578, nameY: null },
-    dropY: 392, dragRect: [386, 124, 1166, 386], dragTextY: 372,
-    breakdown: { x1: 496, x2: 1056, y1: 14, ymin: 400, ymax: 650 },
-    gameover: [506, 12, 1046, 648], toast: [546, 4, 1006, 64],
-  },
 };
 
 /** Phone layout when the table area is short (a phone held sideways). */
-export const pickLayout = (cssW, cssH) => (cssH < 560 || cssW < 820 ? LAYOUTS.phone : LAYOUTS.desktop);
+export const isPhone = (cssW, cssH) => cssH < 560 || cssW < 820;
+
+/**
+ * Phone (landscape) layout: a smaller 1150 x 540 table, so everything is drawn bigger, with
+ * 30% bigger text.  The board fills the full height; the play area takes what is left.
+ */
+export function phoneLayout(g) {
+  const W = 1150, H = 540, top = 6;
+  let k, bx, by, right;
+  if (g && g.isImage) {                       // picture boards: fill the height, at most 420 wide
+    const iw = g.W * g.fit, ih = g.H * g.fit;
+    k = Math.min((H - 2 * top) / ih, 420 / iw);
+    bx = 4 - g.ox * k; by = top - g.oy * k; right = 4 + iw * k;
+  } else {                                     // drawn boards: fit the wooden outline
+    const box = g && g.style === "Cribbagemaster" ? [22, 24, 478, 812] : [22, 16, 478, 846];
+    k = Math.min((H - 2 * top) / (box[3] - box[1] + 6), 420 / (box[2] - box[0] + 6));
+    bx = 4 - box[0] * k; by = top - box[1] * k; right = 4 + (box[2] - box[0] + 6) * k;
+  }
+  const side = { x1: 978, x2: 1146, top: 4, head: 30, log: false, bottom: 536, ch: { 2: 252, 3: 168 }, pw: 64, ph: 82, phone: true };
+  const midL = right + 12, midR = side.x1 - 10, mw = midR - midL, cx = (midL + midR) / 2;
+  const handK = 1.04, hw = CW * handK;
+  return {
+    name: "phone", W, H, ts: 1.3,
+    board: { x: bx, y: by, k }, side, cx, midL, midR,
+    opp: { nameY: 10, y: 24, k: 0.62, step: { 2: 22, 3: 18 }, anchors: { 2: [cx + 40], 3: [midL + mw * 0.36, midL + mw * 0.8] }, goY: 64, thinkY: null },
+    deck: { x: midL + 4, y: 132, labelY: null, k: 0.85 }, starter: { x: midL + 26, y: 120, labelY: 108 },
+    crib: { own: [midR - 52, 120], k: 0.45, gap: 60 },
+    discardMsg: { x: (midL + 130 + midR - 70) / 2, y: 175, w: mw - 220 },
+    peg: { x0: midL + 124, y0: 120, k: 0.85, step: 30, box: [midL + 184, 254, midL + 384, 292], countY: 273, restartY: null, lastX: cx, lastY: 311, lastW: mw - 20, calloutY: 216 },
+    show: { titleY: 104, x0: cx - 208, y: 122, k: 0.85, step: 82, totalY: 258, ofY: 286, msgY: 310, btnY: 492, btnX: [cx - 170, cx + 10] },
+    cut: { titleY: 56, cardY: 76, k: 0.85, span: 130, nameY: 198, spreadL: midL, spreadR: midR, base: 226, msgY: 354, btnY: 376 },
+    hand: { y: 356, k: handK, step: Math.min(105, (mw - hw) / 5), lift: 10, promptY: 334, btnY: 492, nameY: null, short: true },
+    dropY: 340, dragRect: [midL, 104, midR, 336], dragTextY: 322,
+    breakdown: { x1: 255, x2: 895, y1: 6, ymin: 430, ymax: 534 },
+    gameover: [150, 8, 1000, 532], toast: [cx - 260, 4, cx + 260, 76],
+  };
+}
 
 function loadImage(src) {
   return new Promise((res) => {
@@ -342,13 +361,29 @@ export class Table {
     c.addEventListener("pointerup", (ev) => this.onUp(ev));
     c.addEventListener("pointercancel", () => { this.press = null; if (this.drag) { this.drag = null; this.requestRedraw(); } });
     c.addEventListener("contextmenu", (ev) => ev.preventDefault());
-    window.addEventListener("resize", () => this.requestRedraw());
+    // Redraw whenever the table's size changes (rotation, browser bars, full screen).  Phones report
+    // a rotation before it has finished, so redraw again once it has settled.  A stale size would
+    // stretch the picture and put every button in the wrong place.
+    const resized = () => {
+      this.press = null; this.drag = null;
+      this.requestRedraw();
+      clearTimeout(this._settle);
+      this._settle = setTimeout(() => this.requestRedraw(), 350);
+    };
+    if (typeof ResizeObserver !== "undefined") new ResizeObserver(resized).observe(c);
+    window.addEventListener("resize", resized);
+    window.addEventListener("orientationchange", resized);
+    window.visualViewport?.addEventListener("resize", resized);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) resized(); });
     this._lastDown = { t: -1, x: 0, y: 0 };
   }
   _pt(ev) { const r = this.canvas.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; }
 
   onDown(ev) {
     if (ev.button !== undefined && ev.button !== 0) return;
+    const dpr = window.devicePixelRatio || 1;            // size changed since the last drawing? redraw first
+    if (this.canvas.width !== Math.round(Math.max(50, this.canvas.clientWidth) * dpr) ||
+        this.canvas.height !== Math.round(Math.max(50, this.canvas.clientHeight) * dpr)) this.redraw();
     const [cx, cy] = this._pt(ev);
     const [lx, ly] = this.p.toLogical(cx, cy);
     try { this.canvas.setPointerCapture(ev.pointerId); } catch { /* fine */ }
@@ -431,7 +466,8 @@ export class Table {
   redraw() {
     const e = this.engine;
     this.bg = this.settings.background;
-    this.L = pickLayout(this.canvas.clientWidth, this.canvas.clientHeight);
+    this.L = isPhone(this.canvas.clientWidth, this.canvas.clientHeight) ? phoneLayout(this.geometry()) : LAYOUTS.desktop;
+    this.ts = this.L.ts;
     this.p.begin(this.bg, this.L.W, this.L.H);
     if (!e) return;
     this.drawBoard();
@@ -450,7 +486,8 @@ export class Table {
 
   W(w) { return Math.max(1, Math.trunc(w * this.p.sc)); }   // line width in screen pixels
 
-  text(...a) { return this.p.text(...a); }
+  /** Table text (bigger on phones).  Card faces and the board use this.p.text, which isn't scaled. */
+  text(x, y, s, size = 14, ...rest) { return this.p.text(x, y, s, size * (this.ts || 1), ...rest); }
   rrect(...a) { return this.p.rrect(...a); }
   hot(...a) { return this.p.hot(...a); }
 
@@ -503,8 +540,8 @@ export class Table {
     const red = RED_SUITS.has(SUIT[card]);
     const col = !dim ? (red ? "#c8102e" : "#141414") : red ? "#9a6a70" : "#6c6c6c";
     const rk = RANK_NAMES[RANK[card]], st = SUIT_SYMBOLS[SUIT[card]];
-    this.text(x + 7 * k, y + 3 * k, rk, (rk !== "10" ? 30 : 27) * k, true, col, "nw");
-    this.text(x + 9 * k, y + 37 * k, st, 26 * k, false, col, "nw");
+    this.p.text(x + 7 * k, y + 3 * k, rk, (rk !== "10" ? 30 : 27) * k, true, col, "nw");
+    this.p.text(x + 9 * k, y + 37 * k, st, 26 * k, false, col, "nw");
     if (RANK[card] >= 11) {
       const fx1 = x + 31 * k, fy1 = y + 9 * k, fx2 = x + w - 6 * k, fy2 = y + h - 6 * k;
       const img = this.images.face && this.images.face[RANK[card]];
@@ -521,7 +558,7 @@ export class Table {
         this.rrect(fx1, fy1, fx2, fy2, 5 * k, { outline: frame, width: Math.max(2, Math.round(2.6 * k * this.p.sc)) });
       } else this.drawCourt(fx1, fy1, fx2, fy2, RANK[card], red, dim, k);
     } else {
-      this.text(x + w * 0.62, y + h * 0.64, st, 58 * k, false, col);
+      this.p.text(x + w * 0.62, y + h * 0.64, st, 58 * k, false, col);
     }
   }
 
@@ -683,8 +720,8 @@ export class Table {
         const wob = 6 * Math.sin(i * 1.7);
         p.line([L(gx, box[1] + 14 + Math.abs(wob)), L(gx + wob, box[3] - 14)], { fill: woodDark, width: Math.max(1, p.sc * 0.8) });
       }
-      if (g.style === "Cribbagemaster") this.text(bx + 250, by + 62, "CRIBBAGE", 26, true, woodEdge, "center", { family: SERIF });
-      else this.text(bx + 250, by + 428, "CRIB\nBAGE", 44, true, woodDark, "center", { family: SERIF });
+      if (g.style === "Cribbagemaster") this.p.text(bx + 250, by + 62, "CRIBBAGE", 26, true, woodEdge, "center", { family: SERIF });
+      else this.p.text(bx + 250, by + 428, "CRIB\nBAGE", 44, true, woodDark, "center", { family: SERIF });
     }
     g.guides.forEach((line, k) => {
       p.line(line.map(([x, y]) => L(x, y)), { fill: k < this.engine.n ? shade(this.engine.players[k].color, 0.45) : woodDark, width: this.W(1.2) });
@@ -694,10 +731,10 @@ export class Table {
     const [fx, fy] = g.finish;
     p.oval(bx + fx - 9, by + fy - 9, bx + fx + 9, by + fy + 9, { outline: "#2a1708", width: this.W(2) });
     p.oval(bx + fx - 4.5, by + fy - 4.5, bx + fx + 4.5, by + fy + 4.5, { fill: "#2a1708" });
-    for (const [[x, y], s] of g.labels) this.text(bx + x, by + y, s, 10, true, "#3d2410");
+    for (const [[x, y], s] of g.labels) this.p.text(bx + x, by + y, s, 10, true, "#3d2410");
     for (const [p1, p2, lp, s] of g.marks) {
       p.line([L(...p1), L(...p2)], { fill: "#7a0d0d", width: this.W(2) });
-      this.text(bx + lp[0], by + lp[1], s, 10, true, "#7a0d0d");
+      this.p.text(bx + lp[0], by + lp[1], s, 10, true, "#7a0d0d");
     }
     this.drawPegs();
   }
@@ -791,7 +828,33 @@ export class Table {
   }
   personality(i) { return this.session ? this.session.voices.personality(i) : {}; }
 
+  /** Phone sidebar: name across the top, small portrait, big score; no log. */
+  _drawSidebarPhone() {
+    const e = this.engine, S = this.L.side, x1 = S.x1, x2 = S.x2;
+    this.rrect(x1, S.top, x2, S.top + S.head, 10, { fill: shade(this.bg, 0.7), outline: shade(this.bg, 1.3) });
+    this.text((x1 + x2) / 2, S.top + S.head / 2, "Score (121)", 14, true, "#f4e9c8");
+    let y = S.top + S.head + 6;
+    const ch = S.ch[e.n];
+    const dealerKnown = !(e.phase === "cutdeal" && e.cutResult !== "done");
+    e.players.forEach((p, i) => {
+      const active = e.phase === "peg" && e.turn === i && !e.over;
+      this.rrect(x1, y, x2, y + ch - 6, 12, { fill: shade(this.bg, active ? 0.5 : 0.7), outline: active ? "#f4c542" : shade(this.bg, 1.3), width: this.W(active ? 3 : 1) });
+      this.text(x1 + 10, y + 16, p.name, 15, true, "white", "w");
+      this.text(x1 + 10, y + 38, p.human ? "Player" : p.level || "", 10, false, "#cfe3d2", "w");
+      const py = y + 52;
+      this.drawPortrait(p.name, x1 + 8, py, x1 + 8 + S.pw, py + S.ph, p.color);
+      if (dealerKnown && i === e.dealer) {
+        this.rrect(x2 - 80, py, x2 - 8, py + 24, 6, { fill: "#f4c542" });
+        this.text(x2 - 44, py + 12, "DEALER", 10, true, "#222");
+      }
+      if (active && !p.human && this.busy) this.text(x2 - 10, py + 40, this.personality(i).thinking || "thinking...", 10, false, "#f4e9c8", "e");
+      this.text(x2 - 10, Math.min(y + ch - 30, py + S.ph - 14), String(p.score), 32, true, "white", "e");
+      y += ch;
+    });
+  }
+
   drawSidebar() {
+    if (this.L.side.phone) { this._drawSidebarPhone(); return; }
     const e = this.engine, S = this.L.side, x1 = S.x1, x2 = S.x2, top = S.top;
     this.rrect(x1, top, x2, top + S.head, 10, { fill: shade(this.bg, 0.7), outline: shade(this.bg, 1.3) });
     this.text((x1 + x2) / 2, top + S.head / 2, "Score  (to 121)", 15, true, "#f4e9c8");
@@ -831,6 +894,7 @@ export class Table {
 
   drawBubbles() {
     if (!this.session) return;
+    if (this.L.side.phone) { this._drawBubblesPhone(); return; }
     const e = this.engine, S = this.L.side, ch = S.ch[e.n];
     for (const [pi, { line }] of this.session.voices.active()) {
       if (pi >= e.n) continue;
@@ -851,6 +915,26 @@ export class Table {
     }
   }
 
+  /** Phone: the bubble sits to the left of the speaker's score card, pointing at it. */
+  _drawBubblesPhone() {
+    const e = this.engine, S = this.L.side, ch = S.ch[e.n];
+    for (const [pi, { line }] of this.session.voices.active()) {
+      if (pi >= e.n) continue;
+      const x2 = S.x1 - 14, x1 = Math.max(this.L.midL, x2 - 330), w = x2 - x1;
+      const lines = this.p.wrap(line, 15 * this.ts, true, w - 28);
+      const th = lines.length * 15 * this.ts * 1.28;
+      const cy = S.top + S.head + 6 + pi * ch + 52 + S.ph / 2;
+      let y1 = cy - th / 2 - 12, y2 = cy + th / 2 + 12;
+      if (y1 < 4) { y2 += 4 - y1; y1 = 4; }
+      const lw = Math.max(1, Math.trunc(2 * this.p.sc));
+      this.rrect(x1 + 3, y1 + 5, x2 + 3, y2 + 5, 16, { fill: shade(this.bg, 0.35) });
+      this.p.poly([[x2 - 2, cy - 11], [x2 + 14, cy], [x2 - 2, cy + 11]], { fill: "#fffdf2", outline: "#5e3b1a", width: lw });
+      this.rrect(x1, y1, x2, y2, 16, { fill: "#fffdf2", outline: "#5e3b1a", width: lw });
+      this.rrect(x2 - 4, cy - 9, x2, cy + 9, 0, { fill: "#fffdf2" });
+      this.text((x1 + x2) / 2, (y1 + y2) / 2, line, 15, true, "#3b2412", "center", { width: w - 28, justify: "center" });
+    }
+  }
+
   // ----- opponents -----
   // ----- opponents -----
   oppAnchors() { return this.L.opp.anchors[this.engine.n]; }
@@ -864,7 +948,7 @@ export class Table {
       this.text(ax, O.nameY, p.name + (i === e.dealer ? "  (dealer)" : ""), 17, true, "white");
       for (let k = 0; k < cards; k++) this.drawCard(x0 + k * step, O.y, null, { up: false, w, h: hh });
       if (e.phase === "peg" && e.saidGo.has(i)) this.goBubble(ax, O.goY);
-      if (e.phase === "peg" && e.turn === i && !e.over && this.busy) this.text(ax, O.thinkY, this.personality(i).thinking || "thinking...", 13, false, "#f4e9c8");
+      if (O.thinkY !== null && e.phase === "peg" && e.turn === i && !e.over && this.busy) this.text(ax, O.thinkY, this.personality(i).thinking || "thinking...", 13, false, "#f4e9c8");
     });
   }
   goBubble(cx, cy) {
@@ -873,10 +957,10 @@ export class Table {
     this.text(cx, cy, "GO!", 32, true, "#c8102e");
   }
   callout(cx, cy, msg) {
-    const w = this.p.measure(msg, 22, true) + 40, L = this.L;
+    const w = this.p.measure(msg, 22 * this.ts, true) + 40, L = this.L, hh = 26 * this.ts;
     cx = Math.min(Math.max(cx, L.midL + w / 2), L.midR - w / 2);
-    this.rrect(cx - w / 2 + 3, cy - 26 + 4, cx + w / 2 + 3, cy + 26 + 4, 16, { fill: shade(this.bg, 0.45) });
-    this.rrect(cx - w / 2, cy - 26, cx + w / 2, cy + 26, 16, { fill: "#fff8dc", outline: "#e0a800", width: this.W(3) });
+    this.rrect(cx - w / 2 + 3, cy - hh + 4, cx + w / 2 + 3, cy + hh + 4, 16, { fill: shade(this.bg, 0.45) });
+    this.rrect(cx - w / 2, cy - hh, cx + w / 2, cy + hh, 16, { fill: "#fff8dc", outline: "#e0a800", width: this.W(3) });
     this.text(cx, cy, msg, 22, true, "#8a1c1c");
   }
   cribSpot() {
@@ -906,11 +990,12 @@ export class Table {
     if (e.phase === "cutdeal") { this.drawCutForDeal(); return; }
     const showing = e.phase === "show" || (e.phase === "over" && e.showCurrent !== null);
     if (!showing) {
-      for (let k = 0; k < 4; k++) this.drawCard(L.deck.x - k * 2, L.deck.y - k * 2, null, { up: false });
-      this.text(L.deck.x + 45, L.deck.labelY, "Deck", 12, false, "#e7f0e7");
+      const dk = L.deck.k, dw = CW * dk, dh = CH * dk;
+      for (let k = 0; k < 4; k++) this.drawCard(L.deck.x - k * 2, L.deck.y - k * 2, null, { up: false, w: dw, h: dh });
+      if (L.deck.labelY !== null) this.text(L.deck.x + dw / 2, L.deck.labelY, "Deck", 12, false, "#e7f0e7");
       if (e.starter !== null) {
-        this.text(L.starter.x + 45, L.starter.labelY, "Starter", 14, true, "#f4e9c8");
-        this.drawCard(L.starter.x, L.starter.y, e.starter, { glow: "#f4c542" });
+        this.text(L.starter.x + dw / 2, L.starter.labelY, "Starter", 14, true, "#f4e9c8");
+        this.drawCard(L.starter.x, L.starter.y, e.starter, { glow: "#f4c542", w: dw, h: dh });
       }
     }
     const cribShown = showing && e.showCurrent && e.showCurrent[1] === "crib";
@@ -934,27 +1019,28 @@ export class Table {
   drawCutForDeal() {
     const e = this.engine, stage = this.cutStage, L = this.L, C = L.cut;
     this.text(L.cx, C.titleY, "Cut for Deal  -  low card deals first", 22, true, "#f4e9c8");
-    const span = 150, x0 = L.cx - ((e.n - 1) * span) / 2;
+    const span = C.span, x0 = L.cx - ((e.n - 1) * span) / 2, cw = CW * C.k, chh = CH * C.k;
     const lowPi = stage === "done" ? e.dealer : null;
     e.players.forEach((p, i) => {
-      const x = x0 + i * span - CW / 2;
-      if (e.cutPicks.has(i)) this.drawCard(x, C.cardY, e.cutDeck[e.cutPicks.get(i)], { glow: i === lowPi ? "#f4c542" : null });
+      const x = x0 + i * span - cw / 2;
+      if (e.cutPicks.has(i)) this.drawCard(x, C.cardY, e.cutDeck[e.cutPicks.get(i)], { glow: i === lowPi ? "#f4c542" : null, w: cw, h: chh });
       else {
-        this.rrect(x, C.cardY, x + CW, C.cardY + CH, 9, { outline: shade(this.bg, 1.6), dash: [4, 3] });
-        this.text(x + CW / 2, C.cardY + CH / 2, "?", 34, true, shade(this.bg, 1.7));
+        this.rrect(x, C.cardY, x + cw, C.cardY + chh, 9, { outline: shade(this.bg, 1.6), dash: [4, 3] });
+        this.text(x + cw / 2, C.cardY + chh / 2, "?", 34, true, shade(this.bg, 1.7));
       }
-      this.p.oval(x + CW / 2 - 40, C.nameY - 6, x + CW / 2 - 28, C.nameY + 6, { fill: p.color, outline: "#111" });
-      this.text(x + CW / 2 - 22, C.nameY, p.name, 16, true, "white", "w");
+      const nw = this.p.measure(p.name, 16 * this.ts, true) + 18;
+      this.p.oval(x + cw / 2 - nw / 2 - 6, C.nameY - 6, x + cw / 2 - nw / 2 + 6, C.nameY + 6, { fill: p.color, outline: "#111" });
+      this.text(x + cw / 2 - nw / 2 + 12, C.nameY, p.name, 16, true, "white", "w");
     });
     const left = C.spreadL, right = C.spreadR, base = C.base, n = e.cutDeck.length;
-    const step = (right - left - CW) / (n - 1);
+    const step = (right - left - cw) / (n - 1);
     const taken = new Set(e.cutPicks.values());
     for (let idx = 0; idx < n; idx++) {
       if (taken.has(idx)) continue;
       const t = (idx - (n - 1) / 2) / ((n - 1) / 2);
       const x = left + idx * step, y = base - 16 * (1 - t * t);
-      this.drawCard(x, y, null, { up: false, simple: idx < n - 1 });
-      if (stage === "pick") this.hot(x, y, x + CW, y + CH, () => this.humanCut(idx));
+      this.drawCard(x, y, null, { up: false, simple: idx < n - 1, w: cw, h: chh });
+      if (stage === "pick") this.hot(x, y, x + cw, y + chh, () => this.humanCut(idx));
     }
     const msgY = C.msgY, btnY = C.btnY, cx = L.cx;
     if (stage === "pick") this.text(cx, msgY, L.name === "phone" ? "Tap any card in the deck to cut" : "Click any card in the deck to cut", 18, true, "#f4e9c8");
@@ -973,19 +1059,19 @@ export class Table {
     const e = this.engine, P = this.L.peg;
     const seq = e.seq.length ? e.seq : e.prevSeq;
     const dim = !e.seq.length && e.prevSeq.length > 0;
-    const x0 = P.x0, y0 = P.y0, step = seq.length > 9 ? 24 : 34;
+    const x0 = P.x0, y0 = P.y0, step = seq.length > 9 ? P.step * 0.7 : P.step, cw = CW * P.k, chh = CH * P.k;
     const owners = new Map();
     e.players.forEach((p, i) => p.kept.forEach((c) => owners.set(c, i)));
-    seq.forEach((c, k) => this.drawCard(x0 + k * step, y0, c, { dim, glow: e.players[owners.get(c) || 0].color }));
-    if (!seq.length) this.rrect(x0, y0, x0 + CW, y0 + CH, 9, { outline: shade(this.bg, 1.5), dash: [4, 3] });
+    seq.forEach((c, k) => this.drawCard(x0 + k * step, y0, c, { dim, glow: e.players[owners.get(c) || 0].color, w: cw, h: chh }));
+    if (!seq.length) this.rrect(x0, y0, x0 + cw, y0 + chh, 9 * P.k, { outline: shade(this.bg, 1.5), dash: [4, 3] });
     const [bx1, by1, bx2, by2] = P.box;
     this.rrect(bx1, by1, bx2, by2, 14, { fill: shade(this.bg, 0.6), outline: shade(this.bg, 1.4) });
     this.text((bx1 + bx2) / 2, P.countY, `Count: ${e.count}`, 24, true, "white");
-    if (dim) this.text((bx1 + bx2) / 2, P.restartY, "Count starts again at 0", 12, false, "#e7f0e7");
+    if (dim && P.restartY !== null) this.text((bx1 + bx2) / 2, P.restartY, "Count starts again at 0", 12, false, "#e7f0e7");
     if (e.lastPlay) this.text(P.lastX, P.lastY, e.lastPlay, 20, true, "white", "center", { width: P.lastW, justify: "center" });
     if (e.lastScore) {
       const n = Math.max(1, seq.length);
-      this.callout(x0 + (CW + step * (n - 1)) / 2, y0 + CH / 2, e.lastScore);
+      this.callout(x0 + (cw + step * (n - 1)) / 2, P.calloutY ?? y0 + chh / 2, e.lastScore);
     }
   }
 
@@ -995,9 +1081,10 @@ export class Table {
     const p = e.players[pi];
     this.text(L.cx, Sh.titleY, `${p.human ? "Your" : p.name + "'s"} ${kind === "hand" ? "hand" : "crib"}`, 22, true, "white");
     let x = Sh.x0;
-    for (const c of cards) { this.drawCard(x, Sh.y, c); x += 97; }
-    this.text(x + 14 + CW / 2, Sh.y - 10, "Starter", 11, false, "#e7f0e7");
-    this.drawCard(x + 14, Sh.y, e.starter, { glow: "#f4c542" });
+    const sw = CW * Sh.k, sh = CH * Sh.k;
+    for (const c of cards) { this.drawCard(x, Sh.y, c, { w: sw, h: sh }); x += Sh.step; }
+    this.text(x + 14 * Sh.k + sw / 2, Sh.y - 10, "Starter", 11, false, "#e7f0e7");
+    this.drawCard(x + 14 * Sh.k, Sh.y, e.starter, { glow: "#f4c542", w: sw, h: sh });
     let tot = total === 0 ? "Nineteen! (0 points)" : `${total} point${total !== 1 ? "s" : ""}`;
     if (this.hideTotal) tot = "Count it yourself...";
     this.text(L.cx, Sh.totalY, tot, 26, true, "#f4c542");
@@ -1040,7 +1127,7 @@ export class Table {
     if (e.phase === "discard") {
       const whose = e.dealer === e.human ? "your" : `${e.players[e.dealer].name}'s`;
       const need = e.nDiscard - this.selected.size;
-      prompt = need ? `Select ${need} more card${need !== 1 ? "s" : ""} for ${whose} crib  (tap, or drag up)` : "Ready - send to the crib";
+      prompt = need ? `Select ${need} more card${need !== 1 ? "s" : ""} for ${whose} crib` + (Hd.short ? "" : "  (tap, or drag up)") : "Ready - send to the crib";
       const label = e.dealer === e.human ? "Send to Your Crib" : e.n === 2 ? "Send to Opponent's Crib" : `Send to ${e.players[e.dealer].name}'s Crib`;
       this.button(L.cx - 140, Hd.btnY, 280, 46, label, () => this.doDiscard(), true, need === 0 && !this.busy);
     } else if (e.phase === "peg") {
@@ -1085,7 +1172,7 @@ export class Table {
     const [pi, kind, cards, items, total] = e.showCurrent;
     const p = e.players[pi];
     const B = this.L.breakdown, x1 = B.x1, y1 = B.y1, x2 = B.x2;
-    const y2 = Math.max(B.ymin, Math.min(B.ymax, y1 + 190 + 26 * Math.max(1, items.length) + 90));
+    const y2 = Math.max(B.ymin, Math.min(B.ymax, y1 + 190 + 26 * this.ts * Math.max(1, items.length) + 90));
     this.panel(x1, y1, x2, y2);
     this.text((x1 + x2) / 2, y1 + 28, `${p.human ? "Your" : p.name + "'s"} ${kind === "hand" ? "hand" : "crib"} - ${total} points`, 20, true, "#222");
     let x = (x1 + x2) / 2 - (5 * 64 + 14) / 2;
@@ -1097,7 +1184,7 @@ export class Table {
     this.text(x2 - 110, y, "Pts", 13, true, "#555", "e");
     this.text(x2 - 30, y, "Total", 13, true, "#555", "e");
     this.p.line([[x1 + 24, y + 14], [x2 - 24, y + 14]], { fill: "#bbb", width: Math.max(1, this.p.sc) });
-    const lh = Math.min(26, (y2 - 80 - (y + 26)) / Math.max(1, items.length));
+    const lh = Math.min(26 * this.ts, (y2 - 80 - (y + 26)) / Math.max(1, items.length));
     y += 30;
     let run = 0, fifteenN = 0;
     if (!items.length) this.text((x1 + x2) / 2, y + 30, 'No points - "nineteen"', 18, true, "#8a1c1c");
@@ -1109,7 +1196,7 @@ export class Table {
       for (const c of cs) {
         const nm = cardName(c);
         this.text(cx, y, nm, 15, true, RED_SUITS.has(SUIT[c]) ? "#c8102e" : "#141414", "w");
-        cx += this.p.measure(nm, 15, true) + 8;
+        cx += this.p.measure(nm, 15 * this.ts, true) + 8;
       }
       this.text(x2 - 110, y, `+${pts}`, 15, false, "#222", "e");
       this.text(x2 - 30, y, String(run), 15, true, "#222", "e");
@@ -1119,7 +1206,51 @@ export class Table {
     this.p.hotspots.unshift({ x1: 0, y1: 0, x2: this.L.W, y2: this.L.H, cb: () => {}, dbl: null, card: null });   // swallow clicks elsewhere
   }
 
+  /** Phone game-over: result and scores on the left, record and medals on the right. */
+  _drawGameoverPhone() {
+    const e = this.engine, res = e.result();
+    const [x1, y1, x2, y2] = this.L.gameover, mid = (x1 + x2) / 2;
+    this.panel(x1, y1, x2, y2);
+    const w = e.players[e.winner];
+    const lx = x1 + 34, lc = (x1 + mid) / 2;
+    this.text(lc, y1 + 52, res.won ? "You win!" : `${w.name} wins`, 34, true, res.won ? "#1e6b34" : "#8a1c1c");
+    let sub = "";
+    if (res.won && res.skunkGiven) sub = res.skunkGiven === "double" ? "Double skunk!" : "Skunk!";
+    else if (!res.won && res.skunked) sub = res.skunked === "double" ? "You were double skunked" : "You were skunked";
+    let y = y1 + 104;
+    if (sub) { this.text(lc, y, sub, 18, true, "#a0522d"); y += 40; }
+    for (const p of [...e.players].sort((a, b) => b.score - a.score)) {
+      this.p.oval(lx, y - 11, lx + 22, y + 11, { fill: p.color, outline: "#111" });
+      this.text(lx + 34, y, p.name, 18, true, "#222", "w");
+      this.text(mid - 24, y, String(p.score), 20, true, "#222", "e");
+      y += 44;
+    }
+    this.p.line([[mid, y1 + 24], [mid, y2 - 96]], { fill: "#d8cdb2", width: this.W(1.5) });
+    const b = this.host.stats.aggregate(e.n, e.difficulty);
+    const rx = mid + 28, rc = (mid + x2) / 2;
+    this.text(rc, y1 + 40, `Lifetime record vs ${e.difficulty}`, 14, true, "#5e3b1a");
+    this.text(rc, y1 + 72, `${b.wins} win${b.wins === 1 ? "" : "s"} - ${b.losses} loss${b.losses === 1 ? "" : "es"}`, 18, true, "#222");
+    const tr = this.host.tracker;
+    if (tr) {
+      const nw = tr.newThisGame;
+      let ay = y1 + 120;
+      this.text(rc, ay, nw.length ? `New medals: ${nw.length}` : "No new medals this game", 14, true, "#5e3b1a");
+      for (const [a, t] of nw.slice(0, 4)) {
+        ay += 40;
+        const tn = a.tierName(t);
+        this.p.oval(rx, ay - 11, rx + 22, ay + 11, { fill: MEDAL_COLORS[tn], outline: MEDAL_DARK[tn] });
+        this.text(rx + 32, ay, `${a.name} (${tn})`, 14, false, "#222", "w", { width: x2 - rx - 60 });
+      }
+      if (nw.length > 4) this.text(rx + 32, ay + 34, `...and ${nw.length - 4} more`, 12, false, "#666", "w");
+    }
+    const go = (name) => () => this.host.onGameOverButton?.(name);
+    const labels = [["New Game", go("new"), true], ["Medals", go("achievements"), false], ["Stats", go("stats"), false], ["Quit", go("quit"), false]];
+    const bw = 170, gap = 14, bx = mid - (4 * bw + 3 * gap) / 2;
+    labels.forEach(([lbl, cb, prim], i) => this.button(bx + i * (bw + gap), y2 - 76, bw, 56, lbl, cb, prim, true, 16));
+  }
+
   drawGameover() {
+    if (this.L.name === "phone") { this._drawGameoverPhone(); return; }
     const e = this.engine, res = e.result();
     const [x1, y1, x2, y2] = this.L.gameover;
     this.panel(x1, y1, x2, y2);
