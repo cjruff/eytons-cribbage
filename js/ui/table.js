@@ -14,7 +14,7 @@ const RED_SUITS = new Set([1, 2]);
 const FACE_FRAME = { false: "#1f3561", true: "#b3122e" };   // black suits blue, red suits red
 const BACK_GOLD = "#d9b54a";
 const FACE_IMAGES = { 11: "jacks", 12: "queens", 13: "kings" };
-const DRAG_START_PX = 10;                        // movement before a press becomes a drag
+const DRAG_START_PX = 14;                        // movement before a press becomes a drag (fingers wobble)
 const DOUBLE_MS = 400;
 const now = () => performance.now() / 1000;
 
@@ -393,7 +393,8 @@ export class Table {
     this.press = null;
     const h = this.p.hit(lx, ly);
     if (!h) return;
-    if (isDouble) { if (h.dbl) h.dbl(); return; }          // like Tk: a second quick click is a double-click
+    if (isDouble && h.dbl) { h.dbl(); return; }           // like Tk: a second quick click is a double-click
+    // (where a double-click means nothing, e.g. choosing crib cards, a quick second tap is just a tap)
     if (h.card !== null) this.press = { card: h.card, cb: h.cb, x: cx, y: cy, dx: lx - h.x1, dy: ly - h.y1 };
     else h.cb();
   }
@@ -426,7 +427,10 @@ export class Table {
       if (e.phase === "discard") this.dropInCrib(d.card);
       else if (e.phase === "peg") this.humanPlay(d.card);
       else this.requestRedraw();
-    } else this.reorderHand(d.card, lx);
+    } else {
+      if (e.phase === "discard" && this.selected.has(d.card)) this.selected.delete(d.card);   // dragged back down: not for the crib
+      this.reorderHand(d.card, lx);
+    }
   }
   _zone(ly) { return ly < this.L.dropY ? "table" : "hand"; }
   _handList() {

@@ -26,6 +26,7 @@ export const PERSONALITIES = {
   jack: { start: NEVER_PLAYED, lose: NEVER_PLAYED, thinking: "duuuuur..." },
   lori: { start: NEVER_PLAYED, lose: NEVER_PLAYED },
   corey: { start: "I only play on expert because I wrote the damn game" },
+  sue: { see_one: "See one, play one" },
 };
 
 /**
@@ -80,8 +81,11 @@ export class Personalities {
   onEvent(ev, d) {
     const e = this.engine;
     const others = (pi) => [...Array(e.n).keys()].filter((i) => i !== pi);
-    if (ev === "play" && RANK[d.card] === 5) {
-      if (this._counted("five_played", d.pi)) for (const i of others(d.pi)) this.say(i, "five_played");
+    if (ev === "play") {
+      // The first card of the hand matches the starter's rank ("see one, play one").
+      // Only a remark: it never changes which card the computer chooses.
+      if (e.played.length === 1 && e.starter !== null && RANK[d.card] === RANK[e.starter]) this.say(d.pi, "see_one");
+      if (RANK[d.card] === 5 && this._counted("five_played", d.pi)) for (const i of others(d.pi)) this.say(i, "five_played");
     } else if (ev === "show") {
       const runs = d.items.filter(([lbl]) => lbl.startsWith("Run")).length;
       if (runs >= 2 && this._counted("double_run", d.pi)) for (const i of others(d.pi)) this.say(i, "double_run");
