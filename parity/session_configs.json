@@ -1,0 +1,1154 @@
+[
+{
+"settings": {
+"players": 3,
+"levels": [
+"Easy",
+"Hard"
+],
+"colors": [
+"Purple",
+"Red",
+"Green"
+],
+"cpu_names": [
+"Bob",
+"Bob"
+],
+"name": "Eyton"
+},
+"games": 12,
+"seed": 1000,
+"human": "Expert",
+"abandon_every": 7,
+"prior_stats": true
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Expert",
+"Medium"
+],
+"colors": [
+"Red",
+"Purple",
+"Green"
+],
+"cpu_names": [
+"Corey",
+"Grandpa"
+],
+"name": "Corey R"
+},
+"games": 8,
+"seed": 2000,
+"human": "Expert",
+"abandon_every": 7,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Hard",
+"Medium"
+],
+"colors": [
+"Green",
+"Gold",
+"Blue"
+],
+"cpu_names": [
+"Alex",
+"Jack"
+],
+"name": "Eyton"
+},
+"games": 20,
+"seed": 3000,
+"human": "Easy",
+"abandon_every": 7,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Hard",
+"Easy"
+],
+"colors": [
+"Purple",
+"Gold",
+"Blue"
+],
+"cpu_names": [
+"Lori",
+"Larry"
+],
+"name": "Eyton"
+},
+"games": 20,
+"seed": 4000,
+"human": "Hard",
+"abandon_every": 0,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Hard",
+"Hard"
+],
+"colors": [
+"Green",
+"Purple",
+"Red"
+],
+"cpu_names": [
+"Jack",
+"Bob"
+],
+"name": "Eyton"
+},
+"games": 12,
+"seed": 5000,
+"human": "Easy",
+"abandon_every": 5,
+"prior_stats": true
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Expert",
+"Expert"
+],
+"colors": [
+"Purple",
+"Gold",
+"Blue"
+],
+"cpu_names": [
+"Bob",
+"Lori"
+],
+"name": "Eyton"
+},
+"games": 20,
+"seed": 6000,
+"human": "Easy",
+"abandon_every": 7,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Medium",
+"Medium"
+],
+"colors": [
+"Red",
+"Purple",
+"Gold"
+],
+"cpu_names": [
+"Bob",
+"Jack"
+],
+"name": "Corey R"
+},
+"games": 8,
+"seed": 7000,
+"human": "Expert",
+"abandon_every": 0,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Easy",
+"Expert"
+],
+"colors": [
+"Green",
+"Gold",
+"Purple"
+],
+"cpu_names": [
+"Jack",
+"Grandma"
+],
+"name": "Corey R"
+},
+"games": 20,
+"seed": 8000,
+"human": "Expert",
+"abandon_every": 5,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Expert",
+"Medium"
+],
+"colors": [
+"Gold",
+"Purple",
+"Red"
+],
+"cpu_names": [
+"Grandma",
+"Larry"
+],
+"name": "Eyton"
+},
+"games": 20,
+"seed": 9000,
+"human": "Expert",
+"abandon_every": 7,
+"prior_stats": true
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Expert",
+"Hard"
+],
+"colors": [
+"Blue",
+"Gold",
+"Green"
+],
+"cpu_names": [
+"Lori",
+"Lori"
+],
+"name": "Eyton"
+},
+"games": 12,
+"seed": 10000,
+"human": "Expert",
+"abandon_every": 7,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Easy",
+"Hard"
+],
+"colors": [
+"Gold",
+"Green",
+"Red"
+],
+"cpu_names": [
+"Lori",
+""
+],
+"name": "Corey R"
+},
+"games": 12,
+"seed": 11000,
+"human": "Medium",
+"abandon_every": 5,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Expert",
+"Easy"
+],
+"colors": [
+"Gold",
+"Green",
+"Blue"
+],
+"cpu_names": [
+"Grandpa",
+"Sue"
+],
+"name": "Eyton"
+},
+"games": 12,
+"seed": 12000,
+"human": "Medium",
+"abandon_every": 5,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Easy",
+"Easy"
+],
+"colors": [
+"Red",
+"Green",
+"Gold"
+],
+"cpu_names": [
+"",
+"Grandpa"
+],
+"name": "Eyton"
+},
+"games": 8,
+"seed": 13000,
+"human": "Medium",
+"abandon_every": 0,
+"prior_stats": true
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Easy",
+"Hard"
+],
+"colors": [
+"Gold",
+"Blue",
+"Red"
+],
+"cpu_names": [
+"Alex",
+"Grandma"
+],
+"name": "Eyton"
+},
+"games": 20,
+"seed": 14000,
+"human": "Expert",
+"abandon_every": 7,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Medium",
+"Medium"
+],
+"colors": [
+"Green",
+"Blue",
+"Gold"
+],
+"cpu_names": [
+"",
+"Corey"
+],
+"name": "You"
+},
+"games": 12,
+"seed": 15000,
+"human": "Medium",
+"abandon_every": 0,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Hard",
+"Expert"
+],
+"colors": [
+"Green",
+"Blue",
+"Gold"
+],
+"cpu_names": [
+"Sue",
+"Jack"
+],
+"name": "You"
+},
+"games": 8,
+"seed": 16000,
+"human": "Expert",
+"abandon_every": 0,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Easy",
+"Hard"
+],
+"colors": [
+"Gold",
+"Red",
+"Green"
+],
+"cpu_names": [
+"",
+"Lori"
+],
+"name": "Corey R"
+},
+"games": 20,
+"seed": 17000,
+"human": "Hard",
+"abandon_every": 5,
+"prior_stats": true
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Hard",
+"Easy"
+],
+"colors": [
+"Green",
+"Purple",
+"Gold"
+],
+"cpu_names": [
+"Bob",
+"Larry"
+],
+"name": "You"
+},
+"games": 20,
+"seed": 18000,
+"human": "Medium",
+"abandon_every": 5,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Hard",
+"Expert"
+],
+"colors": [
+"Purple",
+"Blue",
+"Gold"
+],
+"cpu_names": [
+"Grandpa",
+""
+],
+"name": "Corey R"
+},
+"games": 8,
+"seed": 19000,
+"human": "Medium",
+"abandon_every": 7,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Medium",
+"Easy"
+],
+"colors": [
+"Purple",
+"Red",
+"Blue"
+],
+"cpu_names": [
+"Grandma",
+"Sue"
+],
+"name": "Corey R"
+},
+"games": 20,
+"seed": 20000,
+"human": "Easy",
+"abandon_every": 0,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Medium",
+"Medium"
+],
+"colors": [
+"Blue",
+"Purple",
+"Green"
+],
+"cpu_names": [
+"Corey",
+"Jack"
+],
+"name": "Eyton"
+},
+"games": 12,
+"seed": 21000,
+"human": "Easy",
+"abandon_every": 5,
+"prior_stats": true
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Hard",
+"Medium"
+],
+"colors": [
+"Gold",
+"Blue",
+"Green"
+],
+"cpu_names": [
+"Lori",
+"Lori"
+],
+"name": "Corey R"
+},
+"games": 12,
+"seed": 22000,
+"human": "Expert",
+"abandon_every": 0,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Hard",
+"Expert"
+],
+"colors": [
+"Green",
+"Red",
+"Gold"
+],
+"cpu_names": [
+"",
+"Corey"
+],
+"name": "You"
+},
+"games": 8,
+"seed": 23000,
+"human": "Medium",
+"abandon_every": 0,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Easy",
+"Expert"
+],
+"colors": [
+"Gold",
+"Green",
+"Purple"
+],
+"cpu_names": [
+"Grandma",
+"Larry"
+],
+"name": "You"
+},
+"games": 12,
+"seed": 24000,
+"human": "Medium",
+"abandon_every": 5,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Medium",
+"Easy"
+],
+"colors": [
+"Purple",
+"Gold",
+"Green"
+],
+"cpu_names": [
+"Bob",
+"Sue"
+],
+"name": "Eyton"
+},
+"games": 12,
+"seed": 25000,
+"human": "Hard",
+"abandon_every": 7,
+"prior_stats": true
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Medium",
+"Easy"
+],
+"colors": [
+"Gold",
+"Red",
+"Blue"
+],
+"cpu_names": [
+"Larry",
+"Grandpa"
+],
+"name": "Eyton"
+},
+"games": 8,
+"seed": 26000,
+"human": "Hard",
+"abandon_every": 7,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Medium",
+"Easy"
+],
+"colors": [
+"Purple",
+"Gold",
+"Blue"
+],
+"cpu_names": [
+"Bob",
+"Grandpa"
+],
+"name": "Corey R"
+},
+"games": 12,
+"seed": 27000,
+"human": "Medium",
+"abandon_every": 5,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Hard",
+"Easy"
+],
+"colors": [
+"Red",
+"Green",
+"Blue"
+],
+"cpu_names": [
+"Jack",
+"Grandma"
+],
+"name": "You"
+},
+"games": 8,
+"seed": 28000,
+"human": "Medium",
+"abandon_every": 0,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Hard",
+"Easy"
+],
+"colors": [
+"Red",
+"Gold",
+"Blue"
+],
+"cpu_names": [
+"Lori",
+"Bob"
+],
+"name": "Eyton"
+},
+"games": 20,
+"seed": 29000,
+"human": "Easy",
+"abandon_every": 5,
+"prior_stats": true
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Hard",
+"Medium"
+],
+"colors": [
+"Purple",
+"Green",
+"Blue"
+],
+"cpu_names": [
+"Grandma",
+"Grandpa"
+],
+"name": "Eyton"
+},
+"games": 12,
+"seed": 30000,
+"human": "Hard",
+"abandon_every": 5,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Hard",
+"Hard"
+],
+"colors": [
+"Red",
+"Green",
+"Purple"
+],
+"cpu_names": [
+"Corey",
+"Alex"
+],
+"name": "Corey R"
+},
+"games": 20,
+"seed": 31000,
+"human": "Easy",
+"abandon_every": 5,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Expert",
+"Hard"
+],
+"colors": [
+"Purple",
+"Red",
+"Gold"
+],
+"cpu_names": [
+"Alex",
+"Sue"
+],
+"name": "Eyton"
+},
+"games": 8,
+"seed": 32000,
+"human": "Easy",
+"abandon_every": 0,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Easy",
+"Easy"
+],
+"colors": [
+"Red",
+"Blue",
+"Gold"
+],
+"cpu_names": [
+"Alex",
+"Bob"
+],
+"name": "Eyton"
+},
+"games": 20,
+"seed": 33000,
+"human": "Hard",
+"abandon_every": 0,
+"prior_stats": true
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Expert",
+"Medium"
+],
+"colors": [
+"Gold",
+"Green",
+"Blue"
+],
+"cpu_names": [
+"Jack",
+"Sue"
+],
+"name": "Corey R"
+},
+"games": 20,
+"seed": 34000,
+"human": "Medium",
+"abandon_every": 0,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Medium",
+"Easy"
+],
+"colors": [
+"Purple",
+"Green",
+"Blue"
+],
+"cpu_names": [
+"Larry",
+"Sue"
+],
+"name": "You"
+},
+"games": 8,
+"seed": 35000,
+"human": "Hard",
+"abandon_every": 7,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Expert",
+"Expert"
+],
+"colors": [
+"Gold",
+"Purple",
+"Red"
+],
+"cpu_names": [
+"Grandma",
+"Bob"
+],
+"name": "You"
+},
+"games": 8,
+"seed": 36000,
+"human": "Easy",
+"abandon_every": 7,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Hard",
+"Hard"
+],
+"colors": [
+"Purple",
+"Gold",
+"Red"
+],
+"cpu_names": [
+"Grandma",
+"Grandma"
+],
+"name": "Eyton"
+},
+"games": 8,
+"seed": 37000,
+"human": "Expert",
+"abandon_every": 0,
+"prior_stats": true
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Medium",
+"Medium"
+],
+"colors": [
+"Green",
+"Gold",
+"Red"
+],
+"cpu_names": [
+"",
+"Corey"
+],
+"name": "Corey R"
+},
+"games": 8,
+"seed": 38000,
+"human": "Hard",
+"abandon_every": 5,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Expert",
+"Expert"
+],
+"colors": [
+"Purple",
+"Green",
+"Gold"
+],
+"cpu_names": [
+"Bob",
+"Corey"
+],
+"name": "You"
+},
+"games": 8,
+"seed": 39000,
+"human": "Expert",
+"abandon_every": 0,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Expert",
+"Easy"
+],
+"colors": [
+"Gold",
+"Green",
+"Red"
+],
+"cpu_names": [
+"Grandma",
+"Larry"
+],
+"name": "You"
+},
+"games": 12,
+"seed": 40000,
+"human": "Hard",
+"abandon_every": 7,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Hard",
+"Medium"
+],
+"colors": [
+"Red",
+"Purple",
+"Gold"
+],
+"cpu_names": [
+"Sue",
+"Bob"
+],
+"name": "Corey R"
+},
+"games": 20,
+"seed": 41000,
+"human": "Easy",
+"abandon_every": 5,
+"prior_stats": true
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Expert",
+"Medium"
+],
+"colors": [
+"Purple",
+"Red",
+"Green"
+],
+"cpu_names": [
+"Larry",
+"Jack"
+],
+"name": "Corey R"
+},
+"games": 20,
+"seed": 42000,
+"human": "Hard",
+"abandon_every": 5,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Easy",
+"Medium"
+],
+"colors": [
+"Blue",
+"Gold",
+"Purple"
+],
+"cpu_names": [
+"",
+"Corey"
+],
+"name": "Corey R"
+},
+"games": 8,
+"seed": 43000,
+"human": "Expert",
+"abandon_every": 0,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Easy",
+"Expert"
+],
+"colors": [
+"Green",
+"Gold",
+"Purple"
+],
+"cpu_names": [
+"Larry",
+""
+],
+"name": "You"
+},
+"games": 8,
+"seed": 44000,
+"human": "Hard",
+"abandon_every": 7,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Medium",
+"Medium"
+],
+"colors": [
+"Red",
+"Purple",
+"Gold"
+],
+"cpu_names": [
+"Grandma",
+"Grandma"
+],
+"name": "You"
+},
+"games": 12,
+"seed": 45000,
+"human": "Easy",
+"abandon_every": 5,
+"prior_stats": true
+},
+{
+"settings": {
+"players": 3,
+"levels": [
+"Hard",
+"Medium"
+],
+"colors": [
+"Purple",
+"Blue",
+"Gold"
+],
+"cpu_names": [
+"Bob",
+"Sue"
+],
+"name": "You"
+},
+"games": 8,
+"seed": 46000,
+"human": "Hard",
+"abandon_every": 5,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Easy",
+"Easy"
+],
+"colors": [
+"Green",
+"Gold",
+"Purple"
+],
+"cpu_names": [
+"Corey",
+"Grandma"
+],
+"name": "You"
+},
+"games": 12,
+"seed": 47000,
+"human": "Expert",
+"abandon_every": 5,
+"prior_stats": false
+},
+{
+"settings": {
+"players": 2,
+"levels": [
+"Easy",
+"Medium"
+],
+"colors": [
+"Gold",
+"Green",
+"Purple"
+],
+"cpu_names": [
+"Alex",
+"Grandpa"
+],
+"name": "You"
+},
+"games": 8,
+"seed": 48000,
+"human": "Expert",
+"abandon_every": 5,
+"prior_stats": false
+}
+]

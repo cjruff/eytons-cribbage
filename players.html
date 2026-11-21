@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eyton's Cribbage - players, stats and achievements (test page)</title>
+<style>
+  :root { --felt: #1e6b34; --dark: #174a28; --panel: #123d20; --gold: #f2c14e; --ink: #f4f1e6; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, "Segoe UI", sans-serif; background: var(--felt); color: var(--ink); }
+  header { padding: 10px 18px; background: var(--dark); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 17px; margin: 0 0 10px; color: var(--gold); }
+  button, select, input { font: inherit; font-size: 14px; padding: 5px 10px; border-radius: 6px; border: 1px solid #0006; }
+  button { background: var(--gold); color: #222; font-weight: 600; cursor: pointer; border: 0; }
+  button.plain { background: #ffffff22; color: var(--ink); }
+  button.danger { background: #b3122e; color: #fff; }
+  button:disabled { opacity: .5; cursor: default; }
+  .wrap { padding: 14px 18px; display: grid; gap: 14px; }
+  .card { background: var(--panel); border-radius: 10px; padding: 14px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  #who { display: flex; gap: 12px; flex-wrap: wrap; }
+  .player { background: #ffffff14; border: 2px solid transparent; border-radius: 12px; padding: 14px 18px; min-width: 150px;
+            cursor: pointer; text-align: center; font-size: 17px; font-weight: 700; color: var(--ink); }
+  .player.on { border-color: var(--gold); background: #f2c14e22; }
+  .player small { display: block; font-weight: 400; font-size: 12px; opacity: .75; margin-top: 3px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .tabs button { background: #ffffff1a; color: var(--ink); }
+  .tabs button.on { background: var(--gold); color: #222; }
+  table { border-collapse: collapse; font-size: 13.5px; }
+  th, td { padding: 4px 10px; border-bottom: 1px solid #ffffff14; text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--gold); position: sticky; top: 0; background: var(--panel); }
+  .scroll { overflow: auto; max-height: 520px; }
+  #feed { font: 13.5px/1.5 ui-monospace, Consolas, monospace; max-height: 240px; overflow-y: auto; white-space: pre-wrap; }
+  .bubble { display: inline-block; background: #fffdf2; color: #3b2412; border: 2px solid #5e3b1a; border-radius: 14px;
+            padding: 3px 10px; font-weight: 700; margin: 2px 0; }
+  .cat { margin: 14px 0 6px; font-weight: 700; color: var(--gold); }
+  .ach { display: grid; grid-template-columns: 110px 1fr 200px; gap: 10px; padding: 5px 0; border-bottom: 1px solid #ffffff10; align-items: center; }
+  .medals { display: flex; gap: 4px; }
+  .medal { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #0005; opacity: .18; }
+  .medal.got { opacity: 1; box-shadow: 0 0 0 2px #fff3; }
+  .ach .nm { font-weight: 700; }
+  .ach .ds { font-size: 12.5px; opacity: .8; }
+  .ach .pr { font-size: 12.5px; text-align: right; opacity: .85; }
+  .new { background: #f2c14e33; border-radius: 6px; }
+  .note { font-size: 12.5px; opacity: .8; }
+  .hide { display: none !important; }
+  #toast { position: fixed; right: 16px; bottom: 16px; display: grid; gap: 8px; z-index: 5; }
+  #toast div { background: #fffdf2; color: #3b2412; border-left: 8px solid var(--gold); padding: 8px 12px; border-radius: 8px;
+               box-shadow: 0 6px 20px #0008; font-weight: 600; max-width: 330px; }
+  dialog { border: 0; border-radius: 12px; padding: 16px; background: #fffdf2; color: #222; text-align: center; }
+  dialog img { max-width: min(700px, 80vw); max-height: 70vh; display: block; margin: 0 auto 10px; }
+  footer { padding: 10px 18px; font-size: 12px; opacity: .7; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Eyton's Cribbage</h1>
+  <span class="note">Session 2 test page: players, stats, achievements, backups</span>
+  <span id="storageWarn" class="note hide" style="color:#ffb4b4">This browser isn't letting the page save, so nothing will be kept after you close it.</span>
+</header>
+
+<div class="wrap">
+  <section class="card">
+    <h2>Who's playing?</h2>
+    <div id="who"></div>
+    <div class="row" style="margin-top:12px">
+      <input id="newName" placeholder="New player's name" maxlength="20">
+      <button id="addBtn">Add player</button>
+      <span id="whoMsg" class="note"></span>
+    </div>
+  </section>
+
+  <section id="main" class="hide">
+    <div class="card">
+      <div class="tabs" id="tabs">
+        <button data-tab="play" class="on">Play test games</button>
+        <button data-tab="stats">Lifetime stats</button>
+        <button data-tab="ach">Achievements</button>
+        <button data-tab="data">Profile &amp; backups</button>
+      </div>
+
+      <div data-pane="play">
+        <p class="note">The computer plays your seat. Games count toward this player's real stats and achievements.</p>
+        <div class="row">
+          <label>Players <select id="sPlayers"><option>2</option><option>3</option></select></label>
+          <label>Your seat plays at <select id="botLevel"></select></label>
+        </div>
+        <div class="row" id="opp1"></div>
+        <div class="row" id="opp2"></div>
+        <div class="row">
+          <button id="play1">Play 1 game</button>
+          <button id="play10" class="plain">Play 10 games</button>
+          <span id="playMsg" class="note"></span>
+        </div>
+        <div id="feed" class="card" style="background:#0d2f18"></div>
+      </div>
+
+      <div data-pane="stats" class="hide">
+        <div class="row">
+          <label>Show <select id="statPlayers"><option value="">All games</option><option value="2">2 players</option><option value="3">3 players</option></select></label>
+          <span class="note">A game is filed under its strongest computer's level, and also under each family opponent who played.</span>
+        </div>
+        <div class="scroll"><table id="statTable"></table></div>
+      </div>
+
+      <div data-pane="ach" class="hide">
+        <div id="achSummary" class="row"></div>
+        <div id="achList"></div>
+      </div>
+
+      <div data-pane="data" class="hide">
+        <div class="row">
+          <input id="renameBox" maxlength="20"><button id="renameBtn" class="plain">Rename</button>
+          <button id="deleteBtn" class="danger">Delete this player</button>
+        </div>
+        <h2 style="margin-top:18px">Backups (moving to another device)</h2>
+        <div class="row">
+          <button id="exportOne">Save this player to a file</button>
+          <button id="exportAll" class="plain">Save everyone to a file</button>
+          <label class="plain" style="cursor:pointer"><button class="plain" onclick="this.nextElementSibling.click()">Load a backup file...</button><input id="importBackup" type="file" accept=".json,application/json" class="hide"></label>
+        </div>
+        <p class="note">Loading a backup replaces players with the same name, and adds any new ones.</p>
+        <h2 style="margin-top:18px">Bring in your stats from the Windows (Python) version</h2>
+        <p class="note">On the Windows PC, the files are in <b>C:\Users\&lt;your name&gt;\.pycribbage</b>: <b>stats.json</b>, <b>achievements.json</b> and <b>settings.json</b>.
+          Pick any of them (hold Ctrl to pick several). They replace this player's stats and achievements.
+          Tip: in the file picker, type <b>%USERPROFILE%\.pycribbage</b> in the address bar to jump there.</p>
+        <div class="row">
+          <button onclick="document.getElementById('importPy').click()">Choose files from the Python version...</button>
+          <input id="importPy" type="file" accept=".json" multiple class="hide">
+        </div>
+        <h2 style="margin-top:18px">Start over</h2>
+        <div class="row">
+          <button id="resetStats" class="danger">Reset this player's stats</button>
+          <button id="resetAch" class="danger">Reset this player's achievements</button>
+        </div>
+        <p id="dataMsg" class="note"></p>
+      </div>
+    </div>
+  </section>
+</div>
+<div id="toast"></div>
+<dialog id="loseDlg"><img id="loseImg" alt="You lose!" src="assets/youlose.png"><p id="loseAlt" class="hide"><b>Corey wins. You lose!</b><br>(Put youlose.png in web\assets to see the picture.)</p><button onclick="this.closest('dialog').close()">OK</button></dialog>
+<footer>Code: &copy; Corey J Ruff &middot; Find a bug? Please report it to me@coreyruff.com</footer>
+
+<script type="module">
+import { ProfileStore, browserStorage } from "./js/profiles.js";
+import { GameSession } from "./js/session.js";
+import { ComputerAI, DIFFICULTIES } from "./js/ai.js";
+import { PRESET_OPPONENTS, forcedLevel, computerNames } from "./js/settings.js";
+import { STAT_ROWS } from "./js/stats.js";
+import { ACHIEVEMENTS, CATEGORIES, MEDAL_COLORS } from "./js/achievements.js";
+import { cardsText } from "./js/cards.js";
+
+const $ = (id) => document.getElementById(id);
+const { storage, persistent } = browserStorage();
+if (!persistent) $("storageWarn").classList.remove("hide");
+const store = new ProfileStore(storage);
+let current = store.lastId;
+let stats = null, tracker = null, busy = false;
+let highlight = new Set();
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function toast(html, ms = 5000) {
+  const d = document.createElement("div");
+  d.innerHTML = html;
+  $("toast").appendChild(d);
+  while ($("toast").children.length > 4) $("toast").firstChild.remove();   // newest few only
+  setTimeout(() => d.remove(), ms);
+}
+
+// ---------- Who's playing ----------
+function drawWho() {
+  const list = store.list();
+  $("who").innerHTML = list.length ? "" : '<span class="note">No players yet. Add one below.</span>';
+  for (const p of list) {
+    const b = document.createElement("button");
+    b.className = "player" + (p.id === current ? " on" : "");
+    const g = store.stats(p.id).aggregate();
+    b.innerHTML = `${esc(p.name)}<small>${g.games_played} games &middot; ${g.wins} wins</small>`;
+    b.onclick = () => choose(p.id);
+    $("who").appendChild(b);
+  }
+}
+$("addBtn").onclick = () => {
+  try {
+    const p = store.create($("newName").value);
+    $("newName").value = ""; $("whoMsg").textContent = "";
+    choose(p.id);
+  } catch (err) { $("whoMsg").textContent = err.message; }
+};
+$("newName").onkeydown = (ev) => { if (ev.key === "Enter") $("addBtn").click(); };
+
+function choose(id) {
+  if (busy) return;
+  current = id;
+  store.select(id);
+  stats = store.stats(id);
+  tracker = store.achievements(id, stats);
+  highlight = new Set();
+  $("main").classList.remove("hide");
+  $("renameBox").value = store.get(id).name;
+  loadPlayForm();
+  drawWho(); drawStats(); drawAch();
+  $("feed").textContent = "";
+}
+
+// ---------- tabs ----------
+document.querySelectorAll("#tabs button").forEach((b) => (b.onclick = () => {
+  document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x === b));
+  document.querySelectorAll("[data-pane]").forEach((p) => p.classList.toggle("hide", p.dataset.pane !== b.dataset.tab));
+  if (b.dataset.tab === "stats") drawStats();
+  if (b.dataset.tab === "ach") drawAch();
+}));
+
+// ---------- play test games ----------
+$("botLevel").innerHTML = DIFFICULTIES.map((d) => `<option>${d}</option>`).join("");
+$("botLevel").value = "Hard";
+function oppRow(i) {
+  const s = store.settings(current);
+  const opts = ['<option value="">(peg colour)</option>', ...PRESET_OPPONENTS.map((n) => `<option>${n}</option>`)].join("");
+  $(`opp${i + 1}`).innerHTML = `<b style="width:95px">Computer ${i + 1}</b>
+    <label>Who <select data-i="${i}" class="oppName">${opts}</select></label>
+    <label>Skill <select data-i="${i}" class="oppLevel">${DIFFICULTIES.map((d) => `<option>${d}</option>`).join("")}</select></label>
+    <span class="note" id="forced${i}"></span>`;
+  const nm = $(`opp${i + 1}`).querySelector(".oppName"), lv = $(`opp${i + 1}`).querySelector(".oppLevel");
+  nm.value = PRESET_OPPONENTS.includes(s.cpu_names[i]) ? s.cpu_names[i] : "";
+  lv.value = s.levels[i];
+  const sync = () => {
+    const f = forcedLevel(nm.value);
+    lv.disabled = !!f;
+    if (f) lv.value = f;
+    $(`forced${i}`).textContent = f ? `${nm.value} only plays ${f}` : "";
+  };
+  nm.onchange = () => { sync(); savePlayForm(); };
+  lv.onchange = savePlayForm;
+  sync();
+}
+function loadPlayForm() {
+  const s = store.settings(current);
+  $("sPlayers").value = String(s.players);
+  oppRow(0); oppRow(1);
+  $("opp2").classList.toggle("hide", s.players !== 3);
+}
+function savePlayForm() {
+  const s = store.settings(current);
+  s.players = +$("sPlayers").value;
+  document.querySelectorAll(".oppName").forEach((el) => (s.cpu_names[+el.dataset.i] = el.value));
+  document.querySelectorAll(".oppLevel").forEach((el) => {
+    if (!el.disabled) s.levels[+el.dataset.i] = el.value;
+  });
+  store.saveSettings(current, s);
+  $("opp2").classList.toggle("hide", s.players !== 3);
+}
+$("sPlayers").onchange = savePlayForm;
+
+function feed(html, cls = "") {
+  const d = document.createElement("div");
+  d.innerHTML = html;
+  if (cls) d.className = cls;
+  $("feed").appendChild(d);
+  $("feed").scrollTop = $("feed").scrollHeight;
+}
+const pause = () => new Promise((r) => setTimeout(r, 0));
+
+async function playOne(bot) {
+  const s = store.settings(current);
+  const names = [s.name, ...computerNames(s)];
+  const sess = new GameSession(s, stats, tracker, {
+    onSay: (pi, line) => feed(`${esc(names[pi])}: <span class="bubble">${esc(line)}</span>`),
+  });
+  const e = sess.engine;
+  const n = e.n;
+  e.cutForDeal(); e.startRound();
+  const me = e.players[0];
+  while (!e.over) {
+    e.aiDiscards();
+    e.humanDiscard(bot.chooseDiscards(me.hand, e.nDiscard, e.dealer === 0, n));
+    if (e.cutStarter()) break;
+    e.startPegging();
+    for (;;) {
+      const st = e.pegAdvance();
+      if (st === "human_play") e.humanPlay(bot.choosePlay(me.pegHand, [...e.seq], e.count, e.unseenFor(0), e.players[1].pegHand.length, n));
+      else if (st === "human_go") e.humanGo();
+      else if (st === "done" || st === "over") break;
+    }
+    if (e.over) break;
+    e.startShow();
+    while (e.showNext()) if (e.over) break;
+    if (!e.over) e.nextRound();
+    await pause();                                     // keep the page responsive
+  }
+  const out = sess.finish();
+  const scores = e.players.map((p) => `${esc(p.name)} ${p.score}`).join(" &middot; ");
+  const r = out.result;
+  const extra = r.won ? (r.skunkGiven ? ` (${r.skunkGiven === "double" ? "double skunk" : "skunk"}!)` : "")
+                      : (r.skunked ? ` (you were ${r.skunked === "double" ? "double " : ""}skunked)` : "");
+  feed(`<b>${r.won ? "You win" : esc(e.players[e.winner].name) + " wins"}${extra}</b> &mdash; ${scores}`);
+  for (const [a, t] of out.newAchievements) {
+    highlight.add(a.id);
+    feed(`&#127941; <b>${esc(a.name)}</b> &mdash; ${a.tierName(t)}`);
+    toast(`&#127941; ${esc(a.name)} &mdash; ${a.tierName(t)}<br><span style="font-weight:400">${esc(a.desc)}</span>`);
+  }
+  return out;
+}
+
+async function playMany(count) {
+  if (busy) return;
+  busy = true;
+  document.querySelectorAll("#play1,#play10").forEach((b) => (b.disabled = true));
+  const bot = new ComputerAI($("botLevel").value);
+  let wins = 0, last = null;
+  for (let i = 0; i < count; i++) {
+    $("playMsg").textContent = `Playing game ${i + 1} of ${count}...`;
+    feed(`<br><b style="color:var(--gold)">Game ${i + 1}</b>`);
+    last = await playOne(bot);
+    if (last.result.won) wins++;
+  }
+  $("playMsg").textContent = `Done: you won ${wins} of ${count}.`;
+  busy = false;
+  document.querySelectorAll("#play1,#play10").forEach((b) => (b.disabled = false));
+  drawWho(); drawStats(); drawAch();
+  if (count === 1 && last.youLose) showYouLose();
+}
+$("play1").onclick = () => playMany(1);
+$("play10").onclick = () => playMany(10);
+
+function showYouLose() {
+  $("loseImg").onerror = () => { $("loseImg").classList.add("hide"); $("loseAlt").classList.remove("hide"); };
+  $("loseDlg").showModal();
+}
+
+// ---------- stats ----------
+function drawStats() {
+  if (!stats) return;
+  const pl = $("statPlayers").value ? +$("statPlayers").value : null;
+  const cols = [["All levels", stats.aggregate(pl)]];
+  for (const d of DIFFICULTIES) cols.push([d, stats.aggregate(pl, d)]);
+  for (const o of PRESET_OPPONENTS) {
+    const b = stats.aggregate(pl, null, o);
+    if (b._found) cols.push([`vs ${o}`, b]);
+  }
+  let html = "<tr><th></th>" + cols.map(([h]) => `<th>${esc(h)}</th>`).join("") + "</tr>";
+  for (const [label, fn] of STAT_ROWS) {
+    html += `<tr><td>${esc(label)}</td>` + cols.map(([, b]) => `<td>${esc(b._found || label === "Games played" ? fn(b) : "-")}</td>`).join("") + "</tr>";
+  }
+  const best = cols[0][1];
+  if (best.highest_hand_cards) html += `<tr><td>Best hand cards</td><td colspan="${cols.length}" style="text-align:left">${esc(best.highest_hand_cards)}</td></tr>`;
+  $("statTable").innerHTML = html;
+}
+$("statPlayers").onchange = drawStats;
+
+// ---------- achievements ----------
+function drawAch() {
+  if (!tracker) return;
+  const { got, total, medals } = tracker.summary();
+  $("achSummary").innerHTML = `<b>${got} of ${total} medals</b>` + Object.entries(medals).map(([t, n]) =>
+    `<span><span class="medal got" style="display:inline-block;vertical-align:middle;background:${MEDAL_COLORS[t]}"></span> ${t} ${n}</span>`).join("");
+  let html = "";
+  for (const cat of CATEGORIES) {
+    html += `<div class="cat">${esc(cat)}</div>`;
+    for (const a of ACHIEVEMENTS.filter((x) => x.category === cat)) {
+      const have = tracker.tiersReached(a);
+      const dots = a.tiers.map((_, i) => `<span class="medal${i < have ? " got" : ""}" title="${a.tierName(i)}: ${a.tiers[i].toLocaleString()}" style="background:${MEDAL_COLORS[a.tierName(i)]}"></span>`).join("");
+      html += `<div class="ach${highlight.has(a.id) ? " new" : ""}"><div class="medals">${dots}</div>
+        <div><div class="nm">${esc(a.name)}${highlight.has(a.id) ? " &mdash; NEW!" : ""}</div><div class="ds">${esc(a.desc)}${a.note ? ` <i>(${esc(a.note)})</i>` : ""}</div></div>
+        <div class="pr">${esc(tracker.progressText(a))}</div></div>`;
+    }
+  }
+  $("achList").innerHTML = html;
+}
+
+// ---------- profile & backups ----------
+const msg = (t) => ($("dataMsg").textContent = t);
+$("renameBtn").onclick = () => { try { store.rename(current, $("renameBox").value); drawWho(); msg("Renamed."); } catch (err) { msg(err.message); } };
+$("deleteBtn").onclick = () => {
+  const p = store.get(current);
+  if (!confirm(`Delete ${p.name} and all of their stats and achievements? This can't be undone.`)) return;
+  store.remove(current);
+  current = null; stats = tracker = null;
+  $("main").classList.add("hide");
+  drawWho();
+};
+function download(obj, fname) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 1)], { type: "application/json" }));
+  a.download = fname;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+const stamp = () => new Date().toISOString().slice(0, 10);
+$("exportOne").onclick = () => download(store.exportBackup([current]), `EytonsCribbage-${store.get(current).name.replace(/[^\w-]+/g, "_")}-${stamp()}.json`);
+$("exportAll").onclick = () => download(store.exportBackup(), `EytonsCribbage-everyone-${stamp()}.json`);
+$("importBackup").onchange = async (ev) => {
+  const f = ev.target.files[0]; ev.target.value = "";
+  if (!f) return;
+  try {
+    const rep = store.importBackup(JSON.parse(await f.text()));
+    msg("Loaded: " + rep.map((r) => `${r.name} (${r.action})`).join(", "));
+    choose(store.findByName(rep[0].name).id);
+  } catch (err) { msg(err.message.startsWith("That file") ? err.message : "That file couldn't be read as a backup."); }
+};
+$("importPy").onchange = async (ev) => {
+  const files = [...ev.target.files]; ev.target.value = "";
+  if (!files.length) return;
+  const p = store.get(current);
+  if (!confirm(`Replace ${p.name}'s stats and achievements with the ones from these files?`)) return;
+  try {
+    const texts = {};
+    for (const f of files) texts[f.name] = await f.text();
+    const done = store.importPython(current, texts);
+    choose(current);
+    msg(`Imported ${done.join(", ")} for ${p.name}.`);
+  } catch (err) { msg(err.message); }
+};
+$("resetStats").onclick = () => {
+  if (!confirm("Reset this player's lifetime stats? This can't be undone.")) return;
+  stats.reset(); drawWho(); drawStats(); msg("Stats reset.");
+};
+$("resetAch").onclick = () => {
+  if (!confirm("Reset this player's achievements? This can't be undone.")) return;
+  tracker.reset(); highlight.clear(); drawAch(); msg("Achievements reset.");
+};
+
+drawWho();
+if (current) choose(current);
+const want = location.hash.slice(1);                 // players.html#ach or #stats (from the game)
+if (want && current) document.querySelector(`#tabs button[data-tab="${want}"]`)?.click();
+</script>
+</body>
+</html>

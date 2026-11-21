@@ -1,0 +1,7 @@
+# test output (re-created by the parity scripts)
+parity/*_games.json
+parity/py_*.json
+parity/js_*.json
+node_modules/
+__pycache__/
+*.pyc

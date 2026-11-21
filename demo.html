@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eyton's Cribbage - engine demo</title>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; background: #1f5e33; color: #f4f1e6; }
+  header { padding: 12px 18px; background: #174a28; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  h1 { font-size: 20px; margin: 0 16px 0 0; }
+  select, button { font-size: 15px; padding: 4px 10px; border-radius: 6px; border: 0; }
+  button { background: #f2c14e; color: #222; font-weight: 600; cursor: pointer; }
+  #scores { display: flex; gap: 18px; padding: 10px 18px; font-size: 18px; font-weight: 700; }
+  .bar { height: 8px; background: #0f3b1d; border-radius: 4px; margin-top: 4px; width: 220px; }
+  .bar div { height: 100%; border-radius: 4px; transition: width .2s; }
+  #log { margin: 0 18px 18px; padding: 10px 14px; background: #123d20; border-radius: 8px; height: calc(100vh - 170px);
+         overflow-y: auto; font: 14px/1.45 ui-monospace, Consolas, monospace; white-space: pre-wrap; }
+  .hand { color: #f2c14e; font-weight: 700; margin-top: 6px; }
+  .win { color: #ffffff; background: #8b1e1e; padding: 2px 6px; font-weight: 700; }
+  footer { position: fixed; right: 18px; bottom: 4px; font-size: 11px; opacity: .6; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Eyton's Cribbage &mdash; engine demo</h1>
+  <label>Players <select id="players"><option>2</option><option>3</option></select></label>
+  <label>Seat 1 <select id="lvl0"></select></label>
+  <label>Seat 2 <select id="lvl1"></select></label>
+  <label id="seat3">Seat 3 <select id="lvl2"></select></label>
+  <label>Speed <select id="speed"><option value="250">Watch</option><option value="40" selected>Fast</option><option value="0">Instant</option></select></label>
+  <button id="go">Play a game</button>
+  <a href="index.html" style="color:#f2c14e;margin-left:auto;font-weight:700">Play the game &rarr;</a>
+  <a href="players.html" style="color:#f2c14e">Players, stats &amp; achievements &rarr;</a>
+</header>
+<div id="scores"></div>
+<div id="log"></div>
+<footer>Code: &copy; Corey J Ruff &middot; computer plays every seat</footer>
+<script type="module">
+import { CribbageEngine } from "./js/engine.js";
+import { ComputerAI, DIFFICULTIES } from "./js/ai.js";
+
+const $ = (id) => document.getElementById(id);
+const COLORS = ["#d23c3c", "#3c78d8", "#e0b020"];
+const NAMES = ["Red", "Blue", "Yellow"];
+["lvl0", "lvl1", "lvl2"].forEach((id, i) => {
+  $(id).innerHTML = DIFFICULTIES.map((d) => `<option>${d}</option>`).join("");
+  $(id).value = ["Expert", "Hard", "Medium"][i];
+});
+const syncSeats = () => ($("seat3").style.display = $("players").value === "3" ? "" : "none");
+$("players").onchange = syncSeats; syncSeats();
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let running = false;
+
+function line(msg) {
+  const d = document.createElement("div");
+  if (msg.startsWith("---")) d.className = "hand";
+  if (msg.startsWith("***")) d.className = "win";
+  d.textContent = msg;
+  $("log").appendChild(d);
+  $("log").scrollTop = $("log").scrollHeight;
+}
+function showScores(e) {
+  $("scores").innerHTML = e.players.map((p) =>
+    `<div><span style="color:${p.color}">&#9679;</span> ${p.name}: ${p.score}
+     <div class="bar"><div style="width:${(100 * p.score) / 121}%;background:${p.color}"></div></div></div>`).join("");
+}
+
+async function playGame() {
+  if (running) return;
+  running = true; $("go").disabled = true; $("log").innerHTML = "";
+  const n = +$("players").value;
+  const levels = [$("lvl1").value, $("lvl2").value].slice(0, n - 1);
+  const e = new CribbageEngine(n, levels, {
+    colors: COLORS.slice(0, n),
+    humanName: `${NAMES[0]} (${$("lvl0").value})`,
+    names: levels.map((l, i) => `${NAMES[i + 1]} (${l})`),
+  });
+  const bot = new ComputerAI($("lvl0").value);       // plays the "human" seat
+  const say = e.say.bind(e);
+  e.say = (m) => { say(m); line(m); };
+  const delay = +$("speed").value;
+  const tick = async () => { showScores(e); if (delay) await sleep(delay); else await sleep(0); };
+
+  e.cutForDeal(); e.startRound(); await tick();
+  const me = e.players[e.human];
+  while (!e.over) {
+    e.aiDiscards();
+    e.humanDiscard(bot.chooseDiscards(me.hand, e.nDiscard, e.dealer === e.human, n));
+    await tick();
+    if (e.cutStarter()) break;
+    e.startPegging();
+    for (;;) {
+      const st = e.pegAdvance();
+      if (st === "human_play") e.humanPlay(bot.choosePlay(me.pegHand, [...e.seq], e.count,
+        e.unseenFor(e.human), e.players[e.nxt(e.human)].pegHand.length, n));
+      else if (st === "human_go") e.humanGo();
+      else if (st === "done" || st === "over") break;
+      await tick();
+    }
+    if (e.over) break;
+    e.startShow();
+    while (e.showNext()) { await tick(); if (e.over) break; }
+    if (e.over) break;
+    e.nextRound(); await tick();
+  }
+  showScores(e);
+  running = false; $("go").disabled = false;
+}
+$("go").onclick = playGame;
+</script>
+</body>

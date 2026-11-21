@@ -1,0 +1,8 @@
+{
+  "name": "eytons-cribbage-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Eyton's Cribbage - browser version. Code: (c) Corey J Ruff",
+  "scripts": { "test": "node --test tests/*.test.js" }
+}
