@@ -7,6 +7,7 @@ import { baseName } from "./settings.js";
 export const BUBBLE_SECONDS = 5;
 export const TRIGGER_AT = { five_played: 4, double_run: 4 };   // say it on a player's Nth one in a game
 const NEVER_PLAYED = "Well, I've never played this game before";
+const SEE_ONE = "See one, play one";
 export const PERSONALITIES = {
   grandpa: {
     double_run: "You get more double runs than anyone I know",
@@ -14,19 +15,21 @@ export const PERSONALITIES = {
     lose: "You are the luckiest person I know",
     skunked: "God dammit, we're playing again!",
     win: "Hot Damn!",
+    see_one: SEE_ONE,
   },
   grandma: {
     crib_five: "You put a 5 in the crib?!?!",
     zero_count: "Oh Sugar",
     cut_ace: "Oh look at that!",
     lose: "Here's your quarter",
+    see_one: SEE_ONE,
   },
-  larry: { lose: "Waaaaah, I don't like to lose" },
+  larry: { lose: "Waaaaah, I don't like to lose", see_one: SEE_ONE },
   alex: { start: NEVER_PLAYED, lose: NEVER_PLAYED },
   jack: { start: NEVER_PLAYED, lose: NEVER_PLAYED, thinking: "duuuuur..." },
   lori: { start: NEVER_PLAYED, lose: NEVER_PLAYED },
-  corey: { start: "I only play on expert because I wrote the damn game" },
-  sue: { see_one: "See one, play one" },
+  corey: { see_one: SEE_ONE },
+  sue: { see_one: SEE_ONE },
 };
 
 /**

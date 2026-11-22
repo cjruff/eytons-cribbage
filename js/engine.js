@@ -151,6 +151,7 @@ export class CribbageEngine {
     this.dealer = lows[0];
     this.cutCards = this.players.map((_, i) => this.cutDeck[this.cutPicks.get(i)]);
     this.cutResult = "done";
+    this._emit("cutdeal", { cards: [...this.cutCards], dealer: this.dealer });
     const d = this.players[this.dealer];
     this.say(`Low card deals: ${d.name} ${d.human ? "deal" : "deals"} first.`);
     return true;
@@ -255,6 +256,7 @@ export class CribbageEngine {
         if (this.award(this.lastPlayer, 1, "Last card for 1", "go")) return "over";
       }
       this.phase = "peg_done";
+      this._emit("pegdone", {});
       return "done";
     }
     if (!this.players.some((_, i) => this.legal(i).length)) {
@@ -273,6 +275,7 @@ export class CribbageEngine {
       if (this.saidGo.has(this.turn)) { this.turn = this.nxt(this.turn); return "quick"; }
       if (p.human) { this.awaiting = "go"; return "human_go"; }
       this.saidGo.add(this.turn);
+      this._emit("go", { pi: this.turn });
       this.say(`${p.name}: Go`);
       this.lastScore = `${p.name} says Go`;
       this.turn = this.nxt(this.turn);
@@ -320,6 +323,7 @@ export class CribbageEngine {
     if (this.awaiting !== "go") return false;
     this.awaiting = null;
     this.saidGo.add(this.human);
+    this._emit("go", { pi: this.human });
     this.say("You: Go");
     this.lastScore = "You say Go";
     this.turn = this.nxt(this.turn);

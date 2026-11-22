@@ -104,3 +104,13 @@ run through both the Python and web stats / achievements / personality code:
 | Offline | 44 files kept on the device; reload with no network: board, cards and photos all load |
 | Install | manifest + icons + offline worker (Chrome/Edge/Android install prompt; iPhone: Share > Add to Home Screen) |
 | Portrait phone | "Turn your phone sideways to play" |
+
+## Achievement update (Nov 22)
+87 achievements / 255 medals, with a fifth medal (Diamond) for 5-level achievements. New: Marathon Man,
+Passing the Baton, Do Pass Go!, Low Rider, Off to a Good Start, I'll Wait Here, You Wait There, Small Ball,
+Ballsy Move, Demoralized, Demoralizer, Run Forrest Run!, You Smell Bad, You Smell Really Really Bad,
+You Almost Didn't Suck, One Is the Loneliest Number, Go Ahead Without Me.  Changed: Down to the Wire ->
+"Ha, Ha... Suck it!", The Agony of Defeat -> "The Unthinkable", Bad Luck Brian (zero hand AND crib), Crib
+Monster note removed.  Removed: Pair-a-dice.  The engine now also reports "go", "pegdone" and "cutdeal"
+events (report only; no change to play).  These are web-only, so the Python comparison scripts no longer
+apply to achievements.  tests/achievements.test.js covers the new ones.

@@ -35,8 +35,8 @@ function playOut(sess, humanLevel = "Expert", seed = 1) {
 }
 
 test("achievement list is complete", () => {
-  assert.equal(ACHIEVEMENTS.length, 71);
-  assert.equal(ACHIEVEMENTS.reduce((t, a) => t + a.tiers.length, 0), 188);
+  assert.equal(ACHIEVEMENTS.length, 87);
+  assert.equal(ACHIEVEMENTS.reduce((t, a) => t + a.tiers.length, 0), 255);
   assert.ok(BY_ID.goat && BY_ID.aces_high && !BY_ID.all_fours);
 });
 
@@ -81,7 +81,7 @@ test("games against family are filed under the opponent too; Corey's picture fla
   const said = [];
   const sess = new GameSession(s, stats, ps.achievements(p.id, stats), { deckRng: new SeededRng(11), onSay: (pi, line) => said.push(line) });
   assert.equal(sess.engine.players[1].level, "Expert");      // Corey only plays Expert
-  assert.ok(said.includes("I only play on expert because I wrote the damn game"));
+  assert.ok(!said.some((l) => l.includes("wrote the damn game")));     // that greeting was retired
   const out = playOut(sess, "Easy", 4);
   assert.equal(stats.aggregate(3, null, "Corey").games_played, 1);
   assert.equal(stats.aggregate(3, null, "Grandma").games_played, 1);

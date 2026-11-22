@@ -5,9 +5,9 @@ import { RANK } from "./cards.js";
 import { SKUNK_LINE } from "./engine.js";
 import { baseName, today } from "./settings.js";
 
-export const TIER_NAMES = ["Bronze", "Silver", "Gold", "Platinum"];
-export const MEDAL_COLORS = { Bronze: "#cd7f32", Silver: "#c4c8cc", Gold: "#f5c518", Platinum: "#8fe0ef" };
-export const MEDAL_DARK = { Bronze: "#7a4a1c", Silver: "#6e7378", Gold: "#8a6d00", Platinum: "#2a8394" };
+export const TIER_NAMES = ["Bronze", "Silver", "Gold", "Platinum", "Diamond"];
+export const MEDAL_COLORS = { Bronze: "#cd7f32", Silver: "#c4c8cc", Gold: "#f5c518", Platinum: "#8fe0ef", Diamond: "#b9d9ff" };
+export const MEDAL_DARK = { Bronze: "#7a4a1c", Silver: "#6e7378", Gold: "#8a6d00", Platinum: "#2a8394", Diamond: "#2f4f8f" };
 
 export class Achievement {
   constructor(id, name, category, desc, metric, tiers, medal = null, note = "") {
@@ -33,9 +33,11 @@ export const ACHIEVEMENTS = [
   A("winning_streak", "Winning Streak", W, "Win 10 games in a row", "best_win_streak", [10], "Gold", ""),
   A("dominator", "Dominator", W, "Win 25 games in a row", "best_win_streak", [25], "Platinum", ""),
   A("comeback_kid", "Comeback Kid", W, "Win after trailing by 30+ points", "comebacks", [1, 3, 10, 25], null, "Silver = The Comeback Tour"),
-  A("down_to_wire", "Down to the Wire", W, "Win by exactly 1 point", "win_by_1", [1, 3, 5, 10], null, ""),
   A("photo_finish", "Photo Finish", W, "Win by 5 points or fewer", "win_by_5", [1, 10, 25, 50], null, ""),
   A("no_mercy", "No Mercy", W, "Win by 40+ points", "win_by_40", [1, 5, 10, 25], null, ""),
+  A("demoralized", "Demoralized", W, "Lose after leading by more than 5 points with 105+ of your own", "demoralized", [1, 25, 50, 100], null, ""),
+  A("demoralizer", "Demoralizer", W, "Win after an opponent led you by more than 5 points with 105+ of their own", "demoralizer", [1, 25, 50, 100], null, ""),
+  A("run_forrest", "Run Forrest, Run!", W, "Have more than 30 points once the first hand has been counted", "run_forrest", [1, 2, 3, 4, 5], null, ""),
   A("heres_your_quarter", "Here's Your Quarter", W, "Beat Grandma", "beat_grandma", [1, 25, 50, 100], null, ""),
   A("skunked", "Skunked!", S, "Skunk an opponent", "skunks", [1], "Bronze", ""),
   A("double_skunked", "Double Skunked!", S, "Double skunk an opponent", "double_skunks", [1], "Silver", ""),
@@ -44,6 +46,9 @@ export const ACHIEVEMENTS = [
   A("double_trouble", "Double Trouble", S, "Double skunk opponents", "double_skunks", [10, 25, 50, 100], null, ""),
   A("lockdown", "Lockdown", S, "Win without letting any opponent reach 100", "lockdowns", [1, 10, 25, 50], null, ""),
   A("clean_sweep", "Clean Sweep", S, "Win 3 games in a row by skunk", "best_skunk_streak", [3], "Gold", ""),
+  A("smell_bad", "You Smell Bad", S, "Get skunked by an opponent (double skunks count too)", "skunked_count", [1, 25, 50, 100], null, ""),
+  A("smell_really_bad", "You Smell Really, Really Bad", S, "Get double skunked", "double_skunked_count", [1, 2, 3, 4, 5], null, ""),
+  A("almost_didnt_suck", "You Almost Didn't Suck", S, "Get skunked with exactly 90 points", "skunked_90", [1, 2, 3, 4, 5], null, ""),
   A("nice_hand", "Nice Hand!", H, "Score a 12+ point hand", "hands_12", [1, 10, 50, 200], null, ""),
   A("double_digits", "Double Digits", H, "Score 16+ points in one hand", "hands_16", [1, 5, 25, 100], null, ""),
   A("big_kahuna", "Big Kahuna", H, "Score 20+ points in one hand", "hands_20", [1, 3, 10, 25], null, ""),
@@ -52,16 +57,17 @@ export const ACHIEVEMENTS = [
   A("almost_perfect", "Almost Perfect", H, "Score a 28-point hand", "hands_28", [1, 2, 3, 5], null, ""),
   A("fifteen_fanatic", "Fifteen Fanatic", H, "Score 10+ points from fifteens in one hand", "hands_fifteens10", [1, 10, 25, 50], null, ""),
   A("run_wild", "Run Wild", H, "Score 12+ points from runs in one hand", "hands_runs12", [1, 5, 15, 30], null, ""),
-  A("pair_a_dice", "Pair-a-dice", H, "Score 12+ points from pairs in one hand", "hands_pairs12", [1, 3, 10, 25], null, ""),
   A("double_play", "Double Play", H, "Score 12+ in both your hand and your crib in one deal", "double_plays", [1, 3, 10, 25], null, ""),
+  A("loneliest", "One Is the Loneliest Number", H, "Score exactly 1 point in your hand or crib", "one_point", [1, 25, 50, 100], null, ""),
   A("crib_starter", "Crib Starter", C, "Score points in your crib", "cribs_scored", [1], "Bronze", ""),
   A("crib_collector", "Crib Collector", C, "Score 100 cribs", "cribs_scored", [100], "Silver", ""),
   A("crib_master", "Crib Master", C, "Score 500 cribs", "cribs_scored", [500], "Gold", ""),
   A("crib_jackpot", "Crib Jackpot", C, "Score a 20+ point crib", "cribs_20", [1, 3, 5, 10], null, ""),
-  A("crib_monster", "Crib Monster", C, "Score a 24+ point crib", "cribs_24", [1, 2, 3, 5], null, "Also covers Cribbage Royalty"),
+  A("crib_monster", "Crib Monster", C, "Score a 24+ point crib", "cribs_24", [1, 2, 3, 5], null, ""),
   A("generous_opponent", "Generous Opponent", C, "Receive a crib worth 15+ points", "cribs_15", [1, 5, 15, 30], null, ""),
   A("gift", "The Gift That Keeps Giving", C, "Give an opponent a crib worth 15+ points", "opp_cribs_15", [1, 5, 15, 30], null, ""),
   A("crib_denial", "Crib Denial", C, "An opponent's crib scores zero", "opp_cribs_0", [1, 10, 50, 100], null, ""),
+  A("ballsy", "Ballsy Move", C, "Put a 5 in someone else's crib", "ballsy", [1, 25, 50, 100], null, ""),
   A("first_blood", "First Blood", P, "Peg your first point", "peg_points", [1], "Bronze", ""),
   A("fifteen_two", "Fifteen Two", P, "Peg a count of 15", "peg_fifteens", [1, 50, 250, 1000], null, ""),
   A("fifteen_four", "Fifteen Four", P, "Peg 15 for 4 (fifteen plus a pair)", "peg_fifteen_fours", [1, 5, 25, 50], null, ""),
@@ -72,11 +78,19 @@ export const ACHIEVEMENTS = [
   A("go_to", "The Go-To", P, "Score Go / last-card points", "go_points", [50, 200, 500, 1000], null, ""),
   A("pegging_pro", "Pegging Pro", P, "Career pegging points", "peg_points", [500, 2500, 5000, 10000], null, ""),
   A("counting_cards", "Counting Cards", P, "With two cards in sequence showing (e.g. 6-7), play a card that leaves no run", "run_blocks", [1, 10, 25, 50], null, ""),
+  A("marathon_man", "Marathon Man", P, "Peg a run of 5 or more cards", "peg_runs5", [1, 25, 50, 100], null, ""),
+  A("passing_baton", "Passing the Baton", P, "3+ plays in a row each make a run, traded between you and an opponent (e.g. 1-2-3, then 4, then 5)", "baton", [1, 25, 50, 100], null, ""),
+  A("pass_go", "Do Pass Go! Do Collect $200", P, "Win the game with a Go point", "win_go", [1, 25, 50, 100], null, ""),
+  A("low_rider", "Low Rider", P, "Cut an Ace to win the deal", "low_rider", [1, 25, 50, 100], null, ""),
+  A("good_start", "Off to a Good Start", P, "Peg 6+ points in the first play of the game", "good_start", [1, 25, 50, 100], null, ""),
+  A("wait_here", "I'll Wait Here", P, "Peg nothing in a hand's play while an opponent pegs 7+", "wait_here", [1, 25, 50, 100], null, ""),
+  A("wait_there", "You Wait There", P, "Peg 7+ in a hand's play while your opponents peg nothing", "wait_there", [1, 25, 50, 100], null, ""),
+  A("small_ball", "Small Ball", P, "Everyone plays all their cards in a hand without anyone saying Go", "small_ball", [1, 25, 50, 100], null, ""),
   A("lucky_cut", "Lucky Cut", D, "A Jack is turned as the starter", "jack_starters", [1, 10, 25, 50], null, ""),
   A("his_heels", "His Heels!", D, "Score 2 for His Heels", "heels", [1, 10, 25, 50], null, "Silver = Jack of All Trades"),
   A("jackpot", "Jackpot", D, "The starter turns your hand into 20+ (adding 10+ itself)", "jackpots", [1, 3, 10, 25], null, ""),
   A("dealers_delight", "Dealer's Delight", D, "Score 20+ in hand + crib in one deal as dealer", "dealer_20", [1, 10, 25, 50], null, ""),
-  A("bad_luck_brian", "Bad Luck Brian", D, "Three zero-point hands in a row", "best_zero_streak", [3], "Bronze", ""),
+  A("bad_luck_brian", "Bad Luck Brian", D, "Score zero in both your hand and your crib in the same deal", "zero_both", [1], "Bronze", ""),
   A("lucky_seven", "Lucky Seven", D, "Seven 10+ point hands in a row", "best_ten_streak", [7], "Gold", ""),
   A("easy_street", "Easy Street", L, "Win 10 games on Easy", "wins_Easy", [10], "Bronze", ""),
   A("intermediate", "Intermediate Player", L, "Win 25 games on Medium", "wins_Medium", [25], "Silver", ""),
@@ -93,7 +107,9 @@ export const ACHIEVEMENTS = [
   A("nobs", "One for His Nobs", X, "Score His Nobs", "nobs", [25, 50, 100, 250], null, ""),
   A("win_nobs_cut", "Win for His Nobs", X, "Win the game with the Jack turned on the cut (His Heels)", "win_heels", [1], "Gold", ""),
   A("aces_high", "Aces High", X, "Hold all four Aces in your hand or your crib (not counting the starter)", "four_aces", [1], "Gold", ""),
-  A("agony", "The Agony of Defeat", X, "Lose by exactly 1 point", "agony", [1], "Bronze", "Also covers The Unthinkable (losing with 120)"),
+  A("agony", "The Unthinkable", X, "Lose by exactly 1 point, with 120 points yourself", "agony", [1], "Bronze", ""),
+  A("down_to_wire", "Ha, Ha... Suck it!", X, "Win by exactly 1 point, leaving your opponent on 120", "win_by_1", [1, 3, 5, 10], null, ""),
+  A("go_ahead", "Go Ahead Without Me", X, "Peg nothing in the first play of the game while an opponent pegs 6+", "go_ahead", [1, 5, 10, 25], null, ""),
 ];
 export const BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
 
@@ -140,7 +156,7 @@ export class AchievementTracker {
     this.engine = engine;
     this.fn = (ev, d) => this.onEvent(ev, d);
     engine.observers.push(this.fn);
-    this.game = { max_deficit: 0, over: false };
+    this.game = { max_deficit: 0, over: false, rounds: 0, aheadLate: false, behindLate: false, wonOnGo: false };
     this.round = {};
     this.newThisGame = [];
   }
@@ -171,13 +187,51 @@ export class AchievementTracker {
     if (h) { h.call(this, e, d); this._done(); }
   }
 
-  _ev_round() { this.round = { hand: null, crib: null, heels: 0 }; }
+  _ev_round(e) {
+    this.game.rounds += 1;
+    // Run Forrest, Run!: more than 30 once the first hand (play, hand and crib) has been counted
+    if (this.game.rounds === 2 && e.players[e.human].score > 30) this.inc("run_forrest");
+    this.round = { hand: null, crib: null, heels: 0, peg: e.players.map(() => 0), go: false, chain: 0, chainWho: new Set(), chainCounted: false };
+  }
 
-  _ev_starter(e, d) { if (RANK[d.card] === 11) this.inc("jack_starters"); }
+  /** Cut for deal decided: Low Rider = you cut an Ace and won the deal. */
+  _ev_cutdeal(e, { cards, dealer }) {
+    if (dealer === e.human && RANK[cards[e.human]] === 1) this.inc("low_rider");
+  }
+
+  /** Someone said Go (Small Ball needs a whole hand without one). */
+  _ev_go() { if (this.round.peg) this.round.go = true; }
+
+  /** The hand's play is over. */
+  _ev_pegdone(e) {
+    const r = this.round;
+    if (!r.peg) return;
+    const me = r.peg[e.human];
+    const others = r.peg.filter((_, i) => i !== e.human);
+    const best = Math.max(...others);
+    if (this.game.rounds === 1) {
+      if (me >= 6) this.inc("good_start");
+      if (me === 0 && best >= 6) this.inc("go_ahead");
+    }
+    if (me === 0 && best >= 7) this.inc("wait_here");
+    if (me >= 7 && others.every((v) => v === 0)) this.inc("wait_there");
+    if (!r.go) this.inc("small_ball");
+  }
+
+  _ev_starter(e, d) {
+    if (RANK[d.card] === 11) this.inc("jack_starters");
+    // Ballsy Move: each 5 you put in someone else's crib
+    if (e.dealer !== e.human && e.cribFrom) {
+      for (const [c, from] of e.cribFrom) if (from === e.human && RANK[c] === 5) this.inc("ballsy");
+    }
+  }
 
   _ev_play(e, { pi, prev, seq, count, pts, reasons }) {
+    this._baton(e, pi, prev, reasons);
     if (pi !== e.human) return;
     const text = reasons.join(" ");
+    const run = text.match(/Run of (\d+)/);
+    if (run && +run[1] >= 5) this.inc("peg_runs5");
     if (count === 15) {
       this.inc("peg_fifteens");
       if (pts >= 4) this.inc("peg_fifteen_fours");
@@ -194,8 +248,36 @@ export class AchievementTracker {
     }
   }
 
+  /** Passing the Baton: 3+ plays in a row each make a run, with you and an opponent both taking part. */
+  _baton(e, pi, prev, reasons) {
+    const r = this.round;
+    if (!r.peg) return;
+    if (!prev.length) { r.chain = 0; r.chainWho = new Set(); r.chainCounted = false; }   // the count started again
+    if (reasons.some((x) => x.startsWith("Run of"))) { r.chain += 1; r.chainWho.add(pi); }
+    else { r.chain = 0; r.chainWho = new Set(); r.chainCounted = false; }
+    if (r.chain >= 3 && !r.chainCounted && r.chainWho.has(e.human) && r.chainWho.size > 1) {
+      r.chainCounted = true;
+      this.inc("baton");
+    }
+  }
+
   _ev_award(e, { pi, pts, kind }) {
     const hp = e.players[e.human];
+    if (this.round.peg && (kind === "peg" || kind === "go")) {
+      this.round.peg[pi] += pts;
+      if (kind === "go") {
+        const lastCard = e.players.every((p) => !p.pegHand.length);
+        if (!lastCard) this.round.go = true;                  // "Go for 1": somebody couldn't play
+        if (e.winner === pi && pi === e.human) this.game.wonOnGo = !lastCard;
+      }
+    }
+    const meNow = hp.score;
+    for (const [i, p] of e.players.entries()) {
+      if (i === e.human) continue;
+      if (p.score >= 105 && p.score - meNow > 5) this.game.behindLate = true;
+    }
+    const oppTop = Math.max(...e.players.filter((_, i) => i !== e.human).map((p) => p.score));
+    if (meNow >= 105 && meNow - oppTop > 5) this.game.aheadLate = true;
     if (pi === e.human && ["peg", "go", "heels"].includes(kind)) {
       this.inc("peg_points", pts);
       if (kind === "go") this.inc("go_points", pts);
@@ -221,27 +303,26 @@ export class AchievementTracker {
       const sum = (f) => items.filter(([lbl]) => f(lbl)).reduce((t, it) => t + it[2], 0);
       const fifteens = sum((l) => l === "Fifteen");
       const runs = sum((l) => l.startsWith("Run"));
-      const pairs = sum((l) => l === "Pair");
       for (const th of [12, 16, 20, 24]) if (total >= th) this.inc(`hands_${th}`);
       if (total === 28 || total === 29) this.inc(`hands_${total}`);
       if (fifteens >= 10) this.inc("hands_fifteens10");
       if (runs >= 12) this.inc("hands_runs12");
-      if (pairs >= 12) this.inc("hands_pairs12");
       if (total >= 20 && total - base >= 10) this.inc("jackpots");
       const ranks = [...cards, starter].map((c) => RANK[c]);
       if (ranks.some((r) => ranks.filter((x) => x === r).length === 4)) this.inc("four_kinds");
       if (aces) this.inc("four_aces");
       const st = this.st;
-      st.zero_streak = total === 0 ? (st.zero_streak || 0) + 1 : 0;
       st.ten_streak = total >= 10 ? (st.ten_streak || 0) + 1 : 0;
-      this.best("best_zero_streak", st.zero_streak);
       this.best("best_ten_streak", st.ten_streak);
       this.round.hand = total;
+      if (total === 1) this.inc("one_point");
     } else {
       if (aces) this.inc("four_aces");
       if (total > 0) this.inc("cribs_scored");
       for (const th of [15, 20, 24]) if (total >= th) this.inc(`cribs_${th}`);
       this.round.crib = total;
+      if (total === 1) this.inc("one_point");
+      if (this.round.hand === 0 && total === 0) this.inc("zero_both");      // Bad Luck Brian
       const h = this.round.hand || 0;
       if (h >= 12 && total >= 12) this.inc("double_plays");
       if (e.dealer === e.human && h + total + (this.round.heels || 0) >= 20) this.inc("dealer_20");
@@ -280,6 +361,8 @@ export class AchievementTracker {
       if (this.game.max_deficit >= 50 && lvl === "Expert") this.inc("expert_comebacks50");
       if (finalKind === "peg" || finalKind === "go") this.inc("last_laughs");
       if (finalKind === "heels") this.inc("win_heels");
+      if (finalKind === "go" && this.game.wonOnGo) this.inc("win_go");
+      if (this.game.behindLate) this.inc("demoralizer");
       if (e.n === 3 && opps.every((p) => p.score < SKUNK_LINE)) this.inc("skunk_both");
       if (res.skunkGiven) {
         this.inc("skunks");
@@ -301,6 +384,10 @@ export class AchievementTracker {
       this.best("best_loss_streak", st.loss_streak);
       if (lvl === "Expert") st.expert_streak = 0;
       if (human.score >= 120) this.inc("agony");
+      if (this.game.aheadLate) this.inc("demoralized");
+      if (res.skunked) this.inc("skunked_count");
+      if (res.skunked === "double") this.inc("double_skunked_count");
+      if (res.skunked && human.score === 90) this.inc("skunked_90");
       if (res.skunked && st.last_skunk_given) this.inc("karma");
     }
     st.last_skunk_given = Boolean(res.won && res.skunkGiven);
