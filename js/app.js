@@ -175,8 +175,6 @@ class App {
         { sep: true },
         { label: "Switch Player...", act: () => this.switchPlayer() },
         { label: "Players & Backups...", act: needPlayer(() => playersWindow(this)) },
-        { sep: true },
-        { label: "Quit", act: () => this.quit() },
       ] },
       { label: "Board", items: () => BOARD_STYLES.map((b) => ({ label: b, radio: true, checked: s().board === b, act: () => this.updateSettings({ board: b }) })) },
       { label: "Background", items: () => [

@@ -1248,8 +1248,8 @@ export class Table {
       if (nw.length > 4) this.text(rx + 32, ay + 34, `...and ${nw.length - 4} more`, 12, false, "#666", "w");
     }
     const go = (name) => () => this.host.onGameOverButton?.(name);
-    const labels = [["New Game", go("new"), true], ["Medals", go("achievements"), false], ["Stats", go("stats"), false], ["Quit", go("quit"), false]];
-    const bw = 170, gap = 14, bx = mid - (4 * bw + 3 * gap) / 2;
+    const labels = [["New Game", go("new"), true], ["Medals", go("achievements"), false], ["Stats", go("stats"), false]];
+    const bw = 200, gap = 16, bx = mid - (labels.length * bw + (labels.length - 1) * gap) / 2;
     labels.forEach(([lbl, cb, prim], i) => this.button(bx + i * (bw + gap), y2 - 76, bw, 56, lbl, cb, prim, true, 16));
   }
 
@@ -1292,8 +1292,8 @@ export class Table {
     const go = (name) => () => this.host.onGameOverButton?.(name);
     const labels = [["New Game", go("new"), true]];
     if (tr) labels.push(["Achievements", go("achievements"), false]);
-    labels.push(["Statistics", go("stats"), false], ["Quit", go("quit"), false]);
-    const bw = 124, gap = 8;
+    labels.push(["Statistics", go("stats"), false]);
+    const bw = 140, gap = 10;
     const bx = (x1 + x2) / 2 - (labels.length * bw + (labels.length - 1) * gap) / 2;
     labels.forEach(([lbl, cb, prim], i) => this.button(bx + i * (bw + gap), y2 - 72, bw, 48, lbl, cb, prim, true, 14));
   }
