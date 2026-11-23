@@ -193,7 +193,7 @@ export class ImageBoard {
   }
 }
 
-export const IMAGE_BOARDS = { "29 Board": "29_board.json", "Cribbagemaster": "cribbagemaster.json" };
+export const IMAGE_BOARDS = { "29 Board": "29_board.json", "Cribbagemaster": "cribbagemaster.json", "Traditional": "traditional.json" };
 
 /** Load a board (picture boards fall back to the drawn style if their files are missing). */
 export async function loadGeometry(style, base = "boards/") {

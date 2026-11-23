@@ -2,7 +2,7 @@
 // Code: (c) Corey J Ruff
 import { DIFFICULTIES } from "./ai.js";
 
-export const BOARD_STYLES = ["Traditional Loop", "29 Board", "Cribbagemaster"];
+export const BOARD_STYLES = ["29 Board", "Traditional", "Cribbagemaster", "Traditional Loop"];
 export const BG_PRESETS = {
   "Green (default)": "#1e6b34", "Dark Green": "#0f4a26", "Blue": "#1d4e89",
   "Burgundy": "#6b1e2e", "Charcoal": "#2f3437",
@@ -23,7 +23,7 @@ export const DEFAULT_SETTINGS = {
   difficulty: "Medium",
   levels: ["Medium", "Medium"],        // skill of computer 1 and computer 2
   colors: ["Red", "Blue", "Gold"],     // peg colour of you, computer 1, computer 2
-  board: "Traditional Loop",
+  board: "29 Board",
   background: "#1e6b34",
   speed: "Normal",
   name: "You",
@@ -41,7 +41,7 @@ export function normalizeSettings(raw) {
   if (s.players !== 2 && s.players !== 3) s.players = 2;
   if (!DIFFICULTIES.includes(s.difficulty)) s.difficulty = "Medium";
   if (s.board === "Rectangular") s.board = "Cribbagemaster";      // renamed
-  if (!BOARD_STYLES.includes(s.board)) s.board = "Traditional Loop";
+  if (!BOARD_STYLES.includes(s.board)) s.board = "29 Board";
   if (!(s.speed in SPEEDS)) s.speed = "Normal";
   if (!(isList(s.levels, 2) && s.levels.every((x) => DIFFICULTIES.includes(x)))) s.levels = [s.difficulty, s.difficulty];
   if (!CARD_BACKS.includes(s.card_back)) s.card_back = "Eyton";
