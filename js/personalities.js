@@ -1,6 +1,6 @@
 // What each family opponent says, and when (thought bubbles).  Ported from cribbage.py.
 // Code: (c) Corey J Ruff
-import { RANK } from "./cards.js";
+import { RANK, sameRankTail } from "./cards.js";
 import { SKUNK_LINE } from "./engine.js";
 import { baseName } from "./settings.js";
 
@@ -8,6 +8,8 @@ export const BUBBLE_SECONDS = 5;
 export const TRIGGER_AT = { five_played: 4, double_run: 4 };   // say it on a player's Nth one in a game
 const NEVER_PLAYED = "Well, I've never played this game before";
 const SEE_ONE = "See one, play one";
+/** Lines every computer player has, family or not (a family member's own line wins). */
+export const EVERYONE = { see_one: SEE_ONE };
 export const PERSONALITIES = {
   grandpa: {
     double_run: "You get more double runs than anyone I know",
@@ -25,10 +27,10 @@ export const PERSONALITIES = {
     see_one: SEE_ONE,
   },
   larry: { lose: "Waaaaah, I don't like to lose", see_one: SEE_ONE },
-  alex: { start: NEVER_PLAYED, lose: NEVER_PLAYED },
-  jack: { start: NEVER_PLAYED, lose: NEVER_PLAYED, thinking: "duuuuur..." },
-  lori: { start: NEVER_PLAYED, lose: NEVER_PLAYED },
-  corey: { see_one: SEE_ONE },
+  alex: { devil: "The Devil", start: NEVER_PLAYED, lose: "Well, we don't play this at Widener" },
+  jack: { devil: "The Devil", start: NEVER_PLAYED, lose: NEVER_PLAYED, thinking: "duuuuur..." },
+  lori: { start: NEVER_PLAYED, lose: NEVER_PLAYED, sixty_nine: "Heeeeey" },
+  corey: { see_one: SEE_ONE, devil: "The Devil" },
   sue: { see_one: SEE_ONE },
 };
 
@@ -51,7 +53,7 @@ export class Personalities {
 
   personality(pi) {
     const p = this.engine.players[pi];
-    return p.human ? {} : PERSONALITIES[baseName(p.name)] || {};
+    return p.human ? {} : { ...EVERYONE, ...(PERSONALITIES[baseName(p.name)] || {}) };
   }
   /** "thinking..." text while this computer decides. */
   thinking(pi) { return this.personality(pi).thinking || "thinking..."; }
@@ -88,8 +90,14 @@ export class Personalities {
       // The first card of the hand matches the starter's rank ("see one, play one").
       // Only a remark: it never changes which card the computer chooses.
       if (e.played.length === 1 && e.starter !== null && RANK[d.card] === RANK[e.starter]) this.say(d.pi, "see_one");
+      // 6-6-6 played in a row (only when the third 6 lands, not again for a fourth)
+      if (RANK[d.card] === 6 && d.seq && sameRankTail(d.seq) === 3) for (let i = 0; i < e.n; i++) this.say(i, "devil");
       if (RANK[d.card] === 5 && this._counted("five_played", d.pi)) for (const i of others(d.pi)) this.say(i, "five_played");
-    } else if (ev === "show") {
+    } else if (ev === "award" && d.pts > 0 && e.players[d.pi].score === 69) {
+      // Lori, whenever anyone's front peg lands on 69 (hers or an opponent's)
+      for (let i = 0; i < e.n; i++) this.say(i, "sixty_nine");
+    }
+    if (ev === "show") {
       const runs = d.items.filter(([lbl]) => lbl.startsWith("Run")).length;
       if (runs >= 2 && this._counted("double_run", d.pi)) for (const i of others(d.pi)) this.say(i, "double_run");
       if (d.kind === "crib") {

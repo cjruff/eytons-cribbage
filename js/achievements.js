@@ -1,7 +1,7 @@
 // Achievements (ported from achievements.py): 71 achievements, 188 medals.
 // The saved data uses the same layout as the Python achievements.json.
 // Code: (c) Corey J Ruff
-import { RANK, VAL } from "./cards.js";
+import { RANK, VAL, sameRankTail } from "./cards.js";
 import { SKUNK_LINE } from "./engine.js";
 import { baseName, today } from "./settings.js";
 
@@ -72,7 +72,7 @@ export const ACHIEVEMENTS = [
   A("fifteen_two", "Fifteen Two", P, "Peg a count of 15", "peg_fifteens", [1, 50, 250, 1000], null, ""),
   A("fifteen_four", "Fifteen Four", P, "Peg 15 for 4 (fifteen plus a pair)", "peg_fifteen_fours", [1, 5, 25, 50], null, ""),
   A("pair_royal", "Pair Royal", P, "Peg 6 for three of a kind", "peg_pair_royals", [1, 5, 25, 50], null, ""),
-  A("double_pair_royal", "Double Pair Royal", P, "Peg 12 for four of a kind", "peg_double_royals", [1, 2, 3, 5], null, ""),
+  A("double_pair_royal", "Quintuplets", P, "Peg 12 for four of a kind", "peg_double_royals", [1, 2, 3, 5], null, ""),
   A("run_for_it", "Run for It", P, "Peg a run of 3+ cards", "peg_runs", [1, 25, 100, 250], null, ""),
   A("last_laugh", "Last Laugh", P, "Win the game with a pegging point", "last_laughs", [1, 5, 10, 25], null, ""),
   A("go_to", "The Go-To", P, "Score Go / last-card points", "go_points", [50, 200, 500, 1000], null, ""),
@@ -85,6 +85,7 @@ export const ACHIEVEMENTS = [
   A("good_start", "Off to a Good Start", P, "Peg 6+ points in the first play of the game", "good_start", [1, 25, 50, 100], null, ""),
   A("wait_here", "I'll Wait Here", P, "Peg nothing in a hand's play while an opponent pegs 7+", "wait_here", [1, 25, 50, 100], null, ""),
   A("wait_there", "You Wait There", P, "Peg 7+ in a hand's play while your opponents peg nothing", "wait_there", [1, 25, 50, 100], null, ""),
+  A("fast_game", "Gonna Be a Fast Game", P, "You and your opponents peg 16+ points between you in one hand's play", "fast_game", [1, 25, 50, 100], null, ""),
   A("small_ball", "Small Ball", P, "Everyone's cards in a hand's play add up to 31 or less (2 players: all 8 cards)", "small_ball", [1, 25, 50, 100], null, ""),
   A("lucky_cut", "Lucky Cut", D, "A Jack is turned as the starter", "jack_starters", [1, 10, 25, 50], null, ""),
   A("his_heels", "His Heels!", D, "Score 2 for His Heels", "heels", [1, 10, 25, 50], null, "Silver = Jack of All Trades"),
@@ -107,7 +108,8 @@ export const ACHIEVEMENTS = [
   A("nobs", "One for His Nobs", X, "Score His Nobs", "nobs", [25, 50, 100, 250], null, ""),
   A("win_nobs_cut", "Win for His Nobs", X, "Win the game with the Jack turned on the cut (His Heels)", "win_heels", [1], "Gold", ""),
   A("aces_high", "Aces High", X, "Hold all four Aces in your hand or your crib (not counting the starter)", "four_aces", [1], "Gold", ""),
-  A("lemmy", "R.I.P Lemmy", X, "The Ace of Spades is turned as the starter", "ace_spades_starter", [1, 2, 3, 4, 5], null, ""),
+  A("devils_play", "The Devil's Play", X, "6-6-6 is played in a row during the play (by anyone)", "devils_play", [1, 10, 25, 50], null, ""),
+  A("lemmy", "R.I.P. Lemmy", X, "The Ace of Spades is turned as the starter", "ace_spades_starter", [1, 2, 3, 4, 5], null, ""),
   A("agony", "The Unthinkable", X, "Lose by exactly 1 point, with 120 points yourself", "agony", [1], "Bronze", ""),
   A("down_to_wire", "Ha, Ha... Suck it!", X, "Win by exactly 1 point, leaving your opponent on 120", "win_by_1", [1, 3, 5, 10], null, ""),
   A("go_ahead", "Go Ahead Without Me", X, "Peg nothing in the first play of the game while an opponent pegs 6+", "go_ahead", [1, 5, 10, 25], null, ""),
@@ -216,6 +218,7 @@ export class AchievementTracker {
     }
     if (me === 0 && best >= 7) this.inc("wait_here");
     if (me >= 7 && others.every((v) => v === 0)) this.inc("wait_there");
+    if (r.peg.reduce((t, v) => t + v, 0) >= 16) this.inc("fast_game");       // Gonna Be a Fast Game
     // Small Ball: every card everyone played this hand adds up to 31 or less (one count, so no Go possible)
     const total = e.players.reduce((t, p) => t + (p.kept || []).reduce((u, c) => u + VAL[c], 0), 0);
     if (total <= 31 && !r.go) this.inc("small_ball");
@@ -223,14 +226,15 @@ export class AchievementTracker {
 
   _ev_starter(e, d) {
     if (RANK[d.card] === 11) this.inc("jack_starters");
-    if (d.card === 0) this.inc("ace_spades_starter");        // R.I.P Lemmy: the Ace of Spades
+    if (d.card === 0) this.inc("ace_spades_starter");        // R.I.P. Lemmy: the Ace of Spades
     // Ballsy Move: each 5 you put in someone else's crib
     if (e.dealer !== e.human && e.cribFrom) {
       for (const [c, from] of e.cribFrom) if (from === e.human && RANK[c] === 5) this.inc("ballsy");
     }
   }
 
-  _ev_play(e, { pi, prev, seq, count, pts, reasons }) {
+  _ev_play(e, { pi, card, prev, seq, count, pts, reasons }) {
+    if (RANK[card] === 6 && seq && sameRankTail(seq) === 3) this.inc("devils_play");     // The Devil's Play
     this._baton(e, pi, prev, reasons);
     if (pi !== e.human) return;
     const text = reasons.join(" ");

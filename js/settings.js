@@ -2,7 +2,7 @@
 // Code: (c) Corey J Ruff
 import { DIFFICULTIES } from "./ai.js";
 
-export const BOARD_STYLES = ["29 Board", "Traditional", "Cribbagemaster", "Traditional Loop"];
+export const BOARD_STYLES = ["29 Board", "Traditional", "Cribbagemaster"];   // "Traditional Loop" retired (Nov 2026)
 export const BG_PRESETS = {
   "Green (default)": "#1e6b34", "Dark Green": "#0f4a26", "Blue": "#1d4e89",
   "Burgundy": "#6b1e2e", "Charcoal": "#2f3437",

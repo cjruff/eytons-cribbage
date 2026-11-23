@@ -9,6 +9,7 @@ import { ComputerAI } from "../js/ai.js";
 import { SeededRng } from "../js/rng.js";
 import { normalizeSettings } from "../js/settings.js";
 import { Personalities } from "../js/personalities.js";
+import { pegScore } from "../js/scoring.js";
 
 const card = (rank, suit = 0) => (rank - 1) * 4 + suit;
 
@@ -38,7 +39,7 @@ function fake({ n = 2, dealer = 1 } = {}) {
 const play = (pi, prev, reasons) => ({ pi, card: 0, prev, seq: [], count: 10, pts: 0, reasons });
 
 test("list: 87 achievements; Pair-a-dice gone; renames; Diamond tier", () => {
-  assert.equal(ACHIEVEMENTS.length, 88);
+  assert.equal(ACHIEVEMENTS.length, 90);
   assert.ok(!BY_ID.pair_a_dice);
   assert.equal(BY_ID.agony.name, "The Unthinkable");
   assert.equal(BY_ID.down_to_wire.name, "Ha, Ha... Suck it!");
@@ -167,8 +168,8 @@ test("Demoralized and Demoralizer; skunk achievements", () => {
   assert.deepEqual([m.skunked_count, m.double_skunked_count, m.skunked_90], [1, 1, undefined]);
 });
 
-test("See one, play one: Sue, Larry, Corey, Grandma, Grandpa (and not Jack)", () => {
-  for (const [who, says] of [["Sue", true], ["Larry", true], ["Corey", true], ["Grandma", true], ["Grandpa", true], ["Jack", false]]) {
+test("See one, play one: every computer player, family or not", () => {
+  for (const [who, says] of [["Sue", true], ["Larry", true], ["Corey", true], ["Grandma", true], ["Grandpa", true], ["Jack", true], ["Blue", true], ["Uncle Bob", true]]) {
     const said = [];
     const e = { n: 2, human: 0, starter: card(7, 0), played: [card(7, 1)], winner: null, observers: [],
       players: [{ name: "You", human: true }, { name: who, human: false }] };
@@ -236,4 +237,73 @@ test("Traditional board: 3 tracks of 120 holes in order, no jumps, single finish
     const a = b.tracks[0][i], c = b.tracks[2][i];
     assert.ok(Math.hypot(a[0] - c[0], a[1] - c[1]) < 32, `tracks drift apart at hole ${i - 1}`);
   }
+});
+
+test("Passing the Baton with the real scoring: 3-4-5-3-4 (runs of 3, never longer)", () => {
+  const { ev, m } = fake();
+  ev("round");
+  const ranks = [3, 4, 5, 3, 4], who = [1, 0, 1, 0, 1], seq = [];
+  const runs = [];
+  ranks.forEach((r, i) => {
+    const prev = [...seq];
+    seq.push(card(r, i % 4));
+    const [, reasons] = pegScore(seq);
+    runs.push(reasons.filter((x) => x.startsWith("Run")).join(""));
+    ev("play", play(who[i], prev, reasons));
+  });
+  assert.deepEqual(runs.map((x) => x.slice(0, 8)), ["", "", "Run of 3", "Run of 3", "Run of 3"]);
+  assert.equal(m.baton, 1);
+});
+
+test("Gonna Be a Fast Game: 16+ pegging points between everyone in one hand's play", () => {
+  let { ev, m, award } = fake();
+  ev("round"); award(0, 6); award(1, 8); award(0, 1, "go"); ev("pegdone");
+  assert.ok(!m.fast_game);                  // 15
+  ev("round"); award(0, 6); award(1, 8); award(0, 2, "go"); ev("pegdone");
+  assert.equal(m.fast_game, 1);             // 16
+  ev("round"); award(0, 2, "heels"); award(1, 14); ev("pegdone");
+  assert.equal(m.fast_game, 1);             // His Heels isn't pegging
+});
+
+test("Lori says Heeeeey when anyone's front peg lands on 69; Alex's new losing line", () => {
+  const said = [];
+  const e = { n: 3, human: 0, starter: null, played: [], winner: null, observers: [],
+    players: [{ name: "You", human: true, score: 65 }, { name: "Lori", human: false, score: 0 }, { name: "Alex", human: false, score: 0 }] };
+  const v = new Personalities(e, (pi, line) => said.push(`${e.players[pi].name}: ${line}`));
+  e.players[0].score = 69; v.onEvent("award", { pi: 0, pts: 4, kind: "peg" });
+  e.players[2].score = 69; v.onEvent("award", { pi: 2, pts: 69, kind: "hand" });
+  e.players[2].score = 75; v.onEvent("award", { pi: 2, pts: 6, kind: "peg" });
+  assert.deepEqual(said, ["Lori: Heeeeey", "Lori: Heeeeey"]);
+  e.players[0].score = 121; e.winner = 0; v.onEvent("award", { pi: 0, pts: 52, kind: "hand" });
+  assert.ok(said.includes("Alex: Well, we don't play this at Widener"));
+});
+
+test("Traditional Loop is retired: saved settings move to the 29 Board", async () => {
+  const { normalizeSettings, BOARD_STYLES } = await import("../js/settings.js");
+  assert.ok(!BOARD_STYLES.includes("Traditional Loop"));
+  assert.equal(normalizeSettings({ board: "Traditional Loop" }).board, "29 Board");
+  assert.equal(normalizeSettings({ board: "Rectangular" }).board, "Cribbagemaster");
+});
+
+test("6-6-6: The Devil's Play, and Corey / Alex / Jack say \"The Devil\"", () => {
+  const six = (s) => card(6, s);
+  const { ev, m } = fake();
+  ev("round");
+  const step = (pi, seq) => ev("play", { pi, card: seq[seq.length - 1], prev: seq.slice(0, -1), seq, count: 0, pts: 0, reasons: [] });
+  step(1, [six(0)]); step(0, [six(0), six(1)]);
+  assert.ok(!m.devils_play);
+  step(1, [six(0), six(1), six(2)]);
+  assert.equal(m.devils_play, 1);
+  step(0, [six(0), six(1), six(2), six(3)]);  // a fourth 6 doesn't count again
+  assert.equal(m.devils_play, 1);
+  step(1, [card(5), six(0), six(1)]);         // only two in a row
+  assert.equal(m.devils_play, 1);
+
+  const said = [];
+  const e = { n: 3, human: 0, starter: null, played: [1, 2, 3], winner: null, observers: [],
+    players: [{ name: "You", human: true }, { name: "Jack", human: false }, { name: "Grandma", human: false }] };
+  const v = new Personalities(e, (pi, line) => said.push(`${e.players[pi].name}: ${line}`));
+  v.onEvent("play", { pi: 2, card: six(2), seq: [six(0), six(1), six(2)] });
+  v.onEvent("play", { pi: 0, card: six(3), seq: [six(0), six(1), six(2), six(3)] });
+  assert.deepEqual(said, ["Jack: The Devil"]);
 });

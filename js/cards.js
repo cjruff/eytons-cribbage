@@ -1,6 +1,12 @@
 // Cards.   Code: (c) Corey J Ruff
 // A card is an integer 0..51:  rank = floor(c / 4) + 1  (1 = Ace .. 13 = King),  suit = c % 4
 
+/** How many cards of the same rank as the last one sit at the end of the pile (e.g. 6-6-6 -> 3). */
+export function sameRankTail(seq) {
+  let n = 0;
+  for (let i = seq.length - 1; i >= 0 && RANK[seq[i]] === RANK[seq[seq.length - 1]]; i--) n++;
+  return n;
+}
 export const SUIT_SYMBOLS = ["♠", "♥", "♦", "♣"];   // spade heart diamond club
 export const RED_SUITS = [1, 2];
 export const RANK_NAMES = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
