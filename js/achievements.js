@@ -68,6 +68,8 @@ export const ACHIEVEMENTS = [
   A("gift", "The Gift That Keeps Giving", C, "Give an opponent a crib worth 15+ points", "opp_cribs_15", [1, 5, 15, 30], null, ""),
   A("crib_denial", "Crib Denial", C, "An opponent's crib scores zero", "opp_cribs_0", [1, 10, 50, 100], null, ""),
   A("ballsy", "Ballsy Move", C, "Put a 5 in someone else's crib", "ballsy", [1, 25, 50, 100], null, ""),
+  A("death_wish", "Death Wish", C, "Put a pair of 5s in someone else's crib", "death_wish", [1, 25, 50, 100], null, ""),
+  A("stocking_pond", "Stocking the Pond", C, "Put a pair of 5s in your own crib", "stocking_pond", [1, 25, 50, 100], null, ""),
   A("first_blood", "First Blood", P, "Peg your first point", "peg_points", [1], "Bronze", ""),
   A("fifteen_two", "Fifteen Two", P, "Peg a count of 15", "peg_fifteens", [1, 50, 250, 1000], null, ""),
   A("fifteen_four", "Fifteen Four", P, "Peg 15 for 4 (fifteen plus a pair)", "peg_fifteen_fours", [1, 5, 25, 50], null, ""),
@@ -227,9 +229,13 @@ export class AchievementTracker {
   _ev_starter(e, d) {
     if (RANK[d.card] === 11) this.inc("jack_starters");
     if (d.card === 0) this.inc("ace_spades_starter");        // R.I.P. Lemmy: the Ace of Spades
-    // Ballsy Move: each 5 you put in someone else's crib
-    if (e.dealer !== e.human && e.cribFrom) {
-      for (const [c, from] of e.cribFrom) if (from === e.human && RANK[c] === 5) this.inc("ballsy");
+    if (e.cribFrom) {
+      let fives = 0;
+      for (const [c, from] of e.cribFrom) if (from === e.human && RANK[c] === 5) fives++;
+      if (e.dealer !== e.human) {
+        for (let i = 0; i < fives; i++) this.inc("ballsy");          // Ballsy Move: each 5 in someone else's crib
+        if (fives >= 2) this.inc("death_wish");                      // Death Wish: a pair of 5s in theirs
+      } else if (fives >= 2) this.inc("stocking_pond");              // Stocking the Pond: a pair of 5s in yours
     }
   }
 

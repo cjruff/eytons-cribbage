@@ -39,7 +39,7 @@ function fake({ n = 2, dealer = 1 } = {}) {
 const play = (pi, prev, reasons) => ({ pi, card: 0, prev, seq: [], count: 10, pts: 0, reasons });
 
 test("list: 87 achievements; Pair-a-dice gone; renames; Diamond tier", () => {
-  assert.equal(ACHIEVEMENTS.length, 90);
+  assert.equal(ACHIEVEMENTS.length, 92);
   assert.ok(!BY_ID.pair_a_dice);
   assert.equal(BY_ID.agony.name, "The Unthinkable");
   assert.equal(BY_ID.down_to_wire.name, "Ha, Ha... Suck it!");
@@ -306,4 +306,19 @@ test("6-6-6: The Devil's Play, and Corey / Alex / Jack say \"The Devil\"", () =>
   v.onEvent("play", { pi: 2, card: six(2), seq: [six(0), six(1), six(2)] });
   v.onEvent("play", { pi: 0, card: six(3), seq: [six(0), six(1), six(2), six(3)] });
   assert.deepEqual(said, ["Jack: The Devil"]);
+});
+
+test("Death Wish and Stocking the Pond: a pair of 5s in a crib", () => {
+  const { ev, m, e } = fake({ dealer: 1 });
+  ev("round");
+  e.cribFrom = new Map([[card(5, 0), 0], [card(5, 1), 0], [card(9), 1], [card(2), 1]]);
+  ev("starter", { card: card(3) });
+  assert.deepEqual([m.death_wish, m.stocking_pond, m.ballsy], [1, undefined, 2]);
+  e.cribFrom = new Map([[card(5, 0), 0], [card(9), 0], [card(5, 1), 1], [card(2), 1]]);   // one 5 each: no pair from you
+  ev("starter", { card: card(3) });
+  assert.deepEqual([m.death_wish, m.ballsy], [1, 3]);
+  e.dealer = 0;
+  e.cribFrom = new Map([[card(5, 2), 0], [card(5, 3), 0], [card(9), 1], [card(2), 1]]);
+  ev("starter", { card: card(3) });
+  assert.deepEqual([m.death_wish, m.stocking_pond, m.ballsy], [1, 1, 3]);
 });

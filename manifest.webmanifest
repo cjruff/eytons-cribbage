@@ -1,7 +1,7 @@
 {
   "name": "Eyton's Cribbage",
   "short_name": "Cribbage",
-  "description": "Cribbage against the family - 2 or 3 players, four skill levels, 90 achievements.",
+  "description": "Cribbage against the family - 2 or 3 players, four skill levels, 92 achievements.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
