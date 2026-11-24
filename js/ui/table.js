@@ -5,7 +5,7 @@ import { RANK, SUIT, RANK_NAMES, SUIT_SYMBOLS, cardName, sortCards } from "../ca
 import { WIN_SCORE } from "../engine.js";
 import { SPEEDS, baseName } from "../settings.js";
 import { GameSession } from "../session.js";
-import { MEDAL_COLORS, MEDAL_DARK } from "../achievements.js";
+import { MEDAL_COLORS, MEDAL_DARK, TIER_NAMES, medalImage } from "../achievements.js";
 import { Painter, LW, LH, shade, mix, SERIF } from "./paint.js";
 import { TRACK_OFFSETS, loadGeometry } from "./geometry.js";
 
@@ -136,6 +136,8 @@ export class Table {
     this.images.face = { 11: jacks, 12: queens, 13: kings };
     this.images.back = back;
     this.images.portraits = {};
+    this.images.medals = {};
+    await Promise.all(TIER_NAMES.map(async (t) => { this.images.medals[t] = await loadImage(medalImage(t)); }));
     if (this.settings) await this.board();
   }
   async board() {
@@ -650,6 +652,13 @@ export class Table {
     }
     this.toasts = this.toasts.filter((x) => x.end > t);
   }
+  /** A medal picture centred at (cx, cy), radius r (a plain coloured circle if the picture is missing). */
+  medal(cx, cy, r, tier) {
+    const img = this.images.medals && this.images.medals[tier];
+    if (img) this.p.image(img, cx - r, cy - r, 2 * r, 2 * r);
+    else this.p.oval(cx - r, cy - r, cx + r, cy + r, { fill: MEDAL_COLORS[tier], outline: MEDAL_DARK[tier], width: this.W(2) });
+  }
+
   _drawToast() {
     const t = now();
     const s = this.toasts.find((x) => x.start <= t && t < x.end);
@@ -658,8 +667,7 @@ export class Table {
     this.rrect(x1 + 4, y1 + 5, x2 + 4, y2 + 5, 16, { fill: shade(this.bg, 0.4) });
     this.rrect(x1, y1, x2, y2, 16, { fill: "#fffaf0", outline: MEDAL_DARK[s.tier], width: this.W(3) });
     const cx = x1 + 36, cy = (y1 + y2) / 2, r = 21;
-    this.p.oval(cx - r, cy - r, cx + r, cy + r, { fill: MEDAL_COLORS[s.tier], outline: MEDAL_DARK[s.tier], width: this.W(2) });
-    this.text(cx, cy, s.tier[0], 18, true, "#2b2b2b");
+    this.medal(cx, cy, r, s.tier);
     this.text(x1 + 70, y1 + 20, "Achievement unlocked!", 12, true, "#8a6d00", "w");
     this.text(x1 + 70, y1 + 45, `${s.name}  -  ${s.tier}`, 18, true, "#222", "w");
   }
@@ -1242,7 +1250,7 @@ export class Table {
       for (const [a, t] of nw.slice(0, 4)) {
         ay += 40;
         const tn = a.tierName(t);
-        this.p.oval(rx, ay - 11, rx + 22, ay + 11, { fill: MEDAL_COLORS[tn], outline: MEDAL_DARK[tn] });
+        this.medal(rx + 11, ay, 13, tn);
         this.text(rx + 32, ay, `${a.name} (${tn})`, 14, false, "#222", "w", { width: x2 - rx - 60 });
       }
       if (nw.length > 4) this.text(rx + 32, ay + 34, `...and ${nw.length - 4} more`, 12, false, "#666", "w");
@@ -1284,7 +1292,7 @@ export class Table {
       for (const [a, t] of nw.slice(0, 5)) {
         ay += 28;
         const tn = a.tierName(t);
-        this.p.oval(x1 + 120, ay - 9, x1 + 138, ay + 9, { fill: MEDAL_COLORS[tn], outline: MEDAL_DARK[tn] });
+        this.medal(x1 + 129, ay, 11, tn);
         this.text(x1 + 148, ay, `${a.name}  (${tn})`, 14, false, "#222", "w");
       }
       if (nw.length > 5) this.text(x1 + 148, ay + 26, `...and ${nw.length - 5} more`, 12, false, "#666", "w");

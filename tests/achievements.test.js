@@ -322,3 +322,33 @@ test("Death Wish and Stocking the Pond: a pair of 5s in a crib", () => {
   ev("starter", { card: card(3) });
   assert.deepEqual([m.death_wish, m.stocking_pond, m.ballsy], [1, 1, 3]);
 });
+
+test("Diamond everywhere: every multi-level achievement has 5 levels; R.I.P. Lemmy 1-5-10-25-50", () => {
+  for (const a of ACHIEVEMENTS) {
+    assert.ok(a.tiers.length === 1 || a.tiers.length === 5, a.name);
+    for (let i = 1; i < a.tiers.length; i++) assert.ok(a.tiers[i] > a.tiers[i - 1], a.name);
+  }
+  assert.deepEqual(BY_ID.lemmy.tiers, [1, 5, 10, 25, 50]);
+  assert.deepEqual(BY_ID.pegging_pro.tiers, [500, 2500, 5000, 10000, 25000]);
+  assert.deepEqual(BY_ID.nice_hand.tiers, [1, 10, 50, 200, 500]);
+  assert.deepEqual(BY_ID.lucky_cut.tiers, [1, 10, 25, 50, 100]);
+});
+
+test("Export stats / achievements files and import them into another player", async () => {
+  const { ProfileStore, MemoryStorage } = await import("../js/profiles.js");
+  const ps = new ProfileStore(new MemoryStorage());
+  const a = ps.create("Eyton"), b = ps.create("Dad");
+  const st = ps.stats(a.id); const tr = ps.achievements(a.id, st);
+  st.record(2, "Hard", { hands: 3, handPoints: 20, cribs: 1, cribPoints: 4, twentyNines: 0, zeroHands: 0, highestHand: 12, highestHandCards: "", highestCrib: 4, highestPeg: 3, pegPoints: 9 },
+    "win", { won: true, humanScore: 121, margin: 30, skunkGiven: null, skunked: null });
+  tr.inc("wins", 3); tr._done();
+  const statsFile = JSON.stringify(ps.raw(a.id).stats), achFile = JSON.stringify(ps.raw(a.id).achievements);
+  // Dad already has a medal; importing only a stats file keeps it
+  const trB = ps.achievements(b.id); trB.inc("nobs", 25); trB._done();
+  assert.deepEqual(ps.importPython(b.id, { "stats.json": statsFile }), ["stats"]);
+  assert.equal(ps.stats(b.id).aggregate(2, "Hard").wins, 1);
+  assert.equal(ps.achievements(b.id).data.metrics.nobs, 25);
+  assert.deepEqual(ps.importPython(b.id, { "achievements.json": achFile }), ["achievements"]);
+  assert.equal(ps.achievements(b.id).data.metrics.wins, 3);
+  assert.ok(!ps.achievements(b.id).data.metrics.nobs);              // the achievements file replaced Dad's
+});

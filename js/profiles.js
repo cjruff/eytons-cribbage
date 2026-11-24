@@ -172,7 +172,8 @@ export class ProfileStore {
       this._write(`${id}.achievements`, { metrics: a.metrics || {}, unlocked: a.unlocked || {}, state: a.state || {} });
       done.push("achievements");
     } else if (parsed.stats) {
-      this.resetAchievements(id);       // rebuilt from the imported stats next time it loads
+      const cur = this._read(`${id}.achievements`);
+      if (!cur || !Object.keys(cur.unlocked || {}).length) this.resetAchievements(id);   // none yet: rebuilt from the imported stats
     }
     if (parsed.settings) {
       const keepName = this.settings(id).name;

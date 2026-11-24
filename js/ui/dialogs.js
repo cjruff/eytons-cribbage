@@ -4,7 +4,7 @@
 import { DIFFICULTIES } from "../ai.js";
 import { BOARD_STYLES, SPEEDS, CARD_BACKS, BACK_PRESETS, PEG_PALETTE, PRESET_OPPONENTS, forcedLevel } from "../settings.js";
 import { STAT_ROWS } from "../stats.js";
-import { ACHIEVEMENTS, CATEGORIES, TIER_NAMES, MEDAL_COLORS, MEDAL_DARK } from "../achievements.js";
+import { ACHIEVEMENTS, CATEGORIES, TIER_NAMES, MEDAL_COLORS, MEDAL_DARK, medalImage } from "../achievements.js";
 import { openWindow, confirmBox, messageBox, h, esc, pickColour } from "./windows.js";
 
 export const APP_TITLE = "Eyton's Cribbage";
@@ -148,7 +148,7 @@ export function statsWindow(app) {
     const allb = buckets[DIFFICULTIES.length];
     tableEl.innerHTML = "";
     tableEl.append(h("tr", {}, h("th", {}, "Statistic"), ...cols.map((c) => h("th" + (PRESET_OPPONENTS.includes(c) ? ".opp" : c === "All levels" ? ".all" : ""), {}, PRESET_OPPONENTS.includes(c) ? "vs " + c : c))));
-    for (const [label, fn] of STAT_ROWS) tableEl.append(h("tr", {}, h("td", {}, label), ...buckets.map((b, i) => h("td" + (i === DIFFICULTIES.length ? ".all" : ""), {}, String(fn(b))))));
+    for (const [label, fn] of STAT_ROWS) tableEl.append(h("tr", {}, h("td", {}, label), ...buckets.map((b, i) => h("td" + (i === DIFFICULTIES.length ? ".all" : i > DIFFICULTIES.length ? ".opp" : ""), {}, String(fn(b))))));
     best.textContent = allb.highest_hand_cards ? `Best hand ever: ${allb.highest_hand_cards}  (${allb.highest_hand})` : "";
   };
   const body = [
@@ -171,8 +171,9 @@ export function achievementsWindow(app, highlight = []) {
   const summary = h("span.summary");
   const show = select(["All", "Earned", "In progress", "Not started", ...CATEGORIES], "All");
   const list = h("div.ach-list");
-  const medal = (r, tn, earned, label = "") => h("span.medal", { style: { width: 2 * r + "px", height: 2 * r + "px", fontSize: Math.max(7, Math.trunc(r * 0.8)) + "px",
-    background: earned ? MEDAL_COLORS[tn] : "#dedad0", borderColor: earned ? MEDAL_DARK[tn] : "#b5b0a3", color: earned ? "#2b2b2b" : "#9a958a" } }, label);
+  // your medal pictures; not earned yet = greyed out
+  const medal = (r, tn, earned) => h("img.medal-img" + (earned ? "" : ".locked"), { src: medalImage(tn), alt: tn, title: tn,
+    width: 2 * r, height: 2 * r, style: { width: 2 * r + "px", height: 2 * r + "px" } });
   const draw = () => {
     const { got, total, medals } = tracker.summary();
     summary.textContent = `${got} of ${total} medals   |   ` + TIER_NAMES.map((n) => `${n}: ${medals[n]}`).join("   ");
@@ -201,7 +202,7 @@ export function achievementsWindow(app, highlight = []) {
         }
         const dates = (tracker.data.unlocked[a.id] || {}).dates || [];
         list.append(h("div.ach-row" + (isNew ? ".new" : have ? ".got" : ""), {},
-          medal(20, bestTier, !!have, have ? bestTier[0] : "?"),
+          medal(20, bestTier, !!have),
           h("div.ach-text", {}, h("div.ach-name", {}, a.name + (isNew ? "   NEW!" : "")), h("div.ach-desc", {}, a.desc + (a.note ? `   (${a.note})` : ""))),
           h("div.ach-pips", {}, ...a.tiers.map((th, i) => h("span.pip", {}, medal(10, a.tierName(i), i < have), h("small", {}, a.tiers.length > 1 || th > 1 ? th.toLocaleString("en-US") : "")))),
           h("div.ach-prog", {}, h("div", {}, tracker.progressText(a)),
@@ -233,6 +234,7 @@ export function playersWindow(app) {
     setTimeout(() => URL.revokeObjectURL(a.href), 3000);
   };
   const stamp = () => new Date().toISOString().slice(0, 10);
+  const safeName = () => app.playerName().replace(/[^\w-]+/g, "_");
   const fileIn = (multi, fn) => {
     const inp = h("input", { type: "file", accept: ".json,application/json", multiple: multi, style: { display: "none" } });
     inp.addEventListener("change", async () => { const files = [...inp.files]; inp.remove(); if (files.length) await fn(files); });
@@ -259,11 +261,14 @@ export function playersWindow(app) {
           } catch (err) { say(err.message.startsWith("That file") ? err.message : "That file couldn't be read as a backup.", true); }
         }) } }, "Load a backup...")),
       h("p.note", {}, "Stats are kept in this browser. Clearing \"cookies and site data\" erases them, so save a backup now and then. Loading a backup replaces players with the same name and adds new ones.")),
-    group("Bring in stats from the Windows (Python) version",
-      h("p.note", {}, "On the Windows PC the files are in ", h("b", {}, "%USERPROFILE%\\.pycribbage"), " (type that into the file picker's address bar): ",
-        h("b", {}, "stats.json"), ", ", h("b", {}, "achievements.json"), " and ", h("b", {}, "settings.json"), ". Pick any of them (Ctrl-click for several). They replace this player's stats and achievements."),
+    group("Stats and achievements files",
+      h("div.row", {}, h("button", { on: { click: () => download(store.raw(app.pid).stats || {}, `EytonsCribbage-${safeName()}-stats-${stamp()}.json`) } }, "Export stats"),
+        h("button", { on: { click: () => download(store.raw(app.pid).achievements || { metrics: {}, unlocked: {}, state: {} }, `EytonsCribbage-${safeName()}-achievements-${stamp()}.json`) } }, "Export achievements")),
+      h("p.note", {}, "Import takes these files, or the ones from the Windows (Python) version, which use the same layout. On that PC they're in ",
+        h("b", {}, "%USERPROFILE%\\.pycribbage"), " (type that into the file picker's address bar): ",
+        h("b", {}, "stats.json"), ", ", h("b", {}, "achievements.json"), " and ", h("b", {}, "settings.json"), ". Pick any of them (Ctrl-click for several); each one replaces that part of this player's data."),
       h("button", { on: { click: () => fileIn(true, async (files) => {
-        if (!(await confirmBox("Import", `Replace ${app.playerName()}'s stats and achievements with the ones from these files?`))) return;
+        if (!(await confirmBox("Import", `Replace ${app.playerName()}'s data with what's in ${files.length === 1 ? files[0].name : "these files"}?`))) return;
         try {
           const texts = {};
           for (const f of files) texts[f.name] = await f.text();
@@ -271,7 +276,7 @@ export function playersWindow(app) {
           app.reloadPlayer();
           say(`Imported ${done.join(", ")} for ${app.playerName()}.`);
         } catch (err) { say(err.message, true); }
-      }) } }, "Choose files from the Python version...")),
+      }) } }, "Import stats / achievements files...")),
     msg,
   ];
   const win = openWindow({ title: "Players & Backups", width: 620, body, buttons: [["Close", null, true]] });

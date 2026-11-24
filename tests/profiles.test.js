@@ -36,7 +36,7 @@ function playOut(sess, humanLevel = "Expert", seed = 1) {
 
 test("achievement list is complete", () => {
   assert.equal(ACHIEVEMENTS.length, 92);
-  assert.equal(ACHIEVEMENTS.reduce((t, a) => t + a.tiers.length, 0), 276);
+  assert.equal(ACHIEVEMENTS.reduce((t, a) => t + a.tiers.length, 0), 332);
   assert.ok(BY_ID.goat && BY_ID.aces_high && !BY_ID.all_fours);
 });
 

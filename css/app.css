@@ -133,3 +133,11 @@ table.score td.pts { font-weight: 700; padding-right: 26px; }
 #goodbye p { margin: 0 0 18px; font-size: 16px; }
 #goodbye button { font: inherit; font-size: 17px; font-weight: 700; padding: 9px 22px; border-radius: 9px; border: 1px solid #5a4a1a; background: #f4c542; cursor: pointer; }
 .win select option:disabled { color: #b0aa9c; }
+
+/* medal pictures in the Achievements window; greyed out until earned */
+.medal-img { display: inline-block; flex: none; object-fit: contain; }
+.medal-img.locked { filter: grayscale(1) brightness(1.15); opacity: .32; }
+.ach-pips .pip { width: 40px; }
+/* Lifetime stats: the "vs" family columns shaded 20% darker than the level columns */
+table.stats td.opp { background: #c9c6bb; }
+table.stats th.opp { background: #bfb8a3; }
