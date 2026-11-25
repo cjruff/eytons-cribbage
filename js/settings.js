@@ -56,7 +56,13 @@ export function normalizeSettings(raw) {
 /** "Grandma 2" -> "grandma" */
 export const baseName = (name) => (name || "").trim().replace(/\s+\d+$/, "").toLowerCase();
 
-export const PRESET_OPPONENTS = ["Grandma", "Grandpa", "Larry", "Sue", "Corey", "Alex", "Jack", "Lori"];
+export const FAMILY_OPPONENTS = ["Grandma", "Grandpa", "Larry", "Sue", "Corey", "Alex", "Jack", "Lori"];
+/** Our furry friends: they play, but they don't talk. */
+export const PET_OPPONENTS = ["Eyton", "Morgan", "Nala", "Rhys", "Wally"];
+export const PRESET_OPPONENTS = [...FAMILY_OPPONENTS, ...PET_OPPONENTS];
+/** True for a family member or pet (they have a built-in portrait). */
+export const isPreset = (name) => PRESET_OPPONENTS.some((o) => o.toLowerCase() === baseName(name));
+export const isPet = (name) => PET_OPPONENTS.some((o) => o.toLowerCase() === baseName(name));
 export const FORCED_LEVEL = { corey: "Expert" };      // opponents who only play at one skill level
 
 /** Skill a named opponent always plays at (null = any). */
@@ -79,7 +85,7 @@ export function computerNames(s) {
   return out;
 }
 
-/** Preset family opponents in a game (lower-case base names), e.g. ["grandpa"]. */
+/** Preset family / pet opponents in a game (lower-case base names), e.g. ["grandpa"]. */
 export function presetOpponents(engine) {
   const presets = new Set(PRESET_OPPONENTS.map((p) => p.toLowerCase()));
   return engine.players.filter((p) => !p.human).map((p) => baseName(p.name)).filter((b) => presets.has(b));

@@ -2,7 +2,7 @@
 // Code: (c) Corey J Ruff
 import { RANK, sameRankTail } from "./cards.js";
 import { SKUNK_LINE } from "./engine.js";
-import { baseName } from "./settings.js";
+import { baseName, isPet } from "./settings.js";
 
 export const BUBBLE_SECONDS = 5;
 export const TRIGGER_AT = { five_played: 4, double_run: 4 };   // say it on a player's Nth one in a game
@@ -53,7 +53,7 @@ export class Personalities {
 
   personality(pi) {
     const p = this.engine.players[pi];
-    return p.human ? {} : { ...EVERYONE, ...(PERSONALITIES[baseName(p.name)] || {}) };
+    return p.human || isPet(p.name) ? {} : { ...EVERYONE, ...(PERSONALITIES[baseName(p.name)] || {}) };   // pets never talk
   }
   /** "thinking..." text while this computer decides. */
   thinking(pi) { return this.personality(pi).thinking || "thinking..."; }

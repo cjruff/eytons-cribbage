@@ -166,3 +166,24 @@ test("Python-style rounding in the stats table", () => {
   assert.equal(fixed(0.125, 2), "0.12");
   assert.equal(fixed(2 / 3, 2), "0.67");
 });
+
+test("photos: yours and typed-in opponents', kept in backups; pets are presets", async () => {
+  const { isPreset, isPet, PRESET_OPPONENTS } = await import("../js/settings.js");
+  assert.ok(PRESET_OPPONENTS.includes("Morgan") && isPet("Wally") && isPreset("Grandma 2") && !isPet("Grandma") && !isPreset("Uncle Bob"));
+  const ps = new ProfileStore(new MemoryStorage());
+  const p = ps.create("Corey");
+  const pic = "data:image/jpeg;base64,AAAA";
+  ps.setPhoto(p.id, pic);
+  ps.setOpponentPhoto("uncle bob", pic + "B");
+  assert.equal(ps.photo(p.id), pic);
+  const backup = JSON.parse(JSON.stringify(ps.exportBackup()));
+  const other = new ProfileStore(new MemoryStorage());
+  other.importBackup(backup);
+  const q = other.findByName("Corey");
+  assert.equal(other.photo(q.id), pic);
+  assert.equal(other.opponentPhoto("uncle bob"), pic + "B");
+  other.setPhoto(q.id, null);
+  assert.equal(other.photo(q.id), null);
+  other.remove(q.id);
+  assert.equal(other.s.getItem(`eyton.${q.id}.photo`), null);
+});

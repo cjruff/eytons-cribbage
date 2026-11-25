@@ -352,3 +352,16 @@ test("Export stats / achievements files and import them into another player", as
   assert.equal(ps.achievements(b.id).data.metrics.wins, 3);
   assert.ok(!ps.achievements(b.id).data.metrics.nobs);              // the achievements file replaced Dad's
 });
+
+test("our furry friends play but never talk", () => {
+  for (const pet of ["Eyton", "Morgan", "Nala", "Rhys", "Wally", "Nala 2"]) {
+    const said = [];
+    const e = { n: 2, human: 0, starter: card(7, 0), played: [card(7, 1)], winner: null, observers: [],
+      players: [{ name: "You", human: true, score: 0 }, { name: pet, human: false, score: 0 }] };
+    const v = new Personalities(e, (pi, line) => said.push(line));
+    v.onEvent("play", { pi: 1, card: card(7, 1) });                       // would be "See one, play one"
+    e.players[1].score = 121; e.winner = 1; v.onEvent("award", { pi: 1, pts: 20, kind: "hand" });
+    assert.deepEqual(said, [], pet);
+    assert.deepEqual(v.personality(1), {}, pet);
+  }
+});

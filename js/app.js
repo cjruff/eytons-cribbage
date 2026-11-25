@@ -1,7 +1,8 @@
 // Eyton's Cribbage - the game page: menus, windows, players and the table.
 // Code: (c) Corey J Ruff
 import { ProfileStore, browserStorage } from "./profiles.js";
-import { BOARD_STYLES, BG_PRESETS, CARD_BACKS, BACK_PRESETS, normalizeSettings } from "./settings.js";
+import { BOARD_STYLES, BG_PRESETS, CARD_BACKS, BACK_PRESETS, normalizeSettings, isPreset, baseName } from "./settings.js";
+import { pickPhoto } from "./photo.js";
 import { Table } from "./ui/table.js";
 import { buildMenuBar, openWindow, confirmBox, windowOpen, pickColour, h } from "./ui/windows.js";
 import { newGameWindow, settingsWindow, statsWindow, achievementsWindow, playersWindow, whoWindow, aboutWindow, helpWindow } from "./ui/dialogs.js";
@@ -22,6 +23,7 @@ class App {
       onYouLose: () => this.youLose(),
       onGameOverButton: (name) => this.gameOverButton(name),
       onChange: () => this.changed(),
+      photoFor: (p) => this.photoFor(p),
     });
     this.menus = buildMenuBar(document.getElementById("menubar"), this.menuSpec());
     this.title = h("span.title");
@@ -49,6 +51,26 @@ class App {
       openWindow({ title: "Stats won't be saved", body: h("p.msg", {}, "This browser isn't letting the game save (a private window, or storage is switched off). You can play, but stats and achievements will be lost when you close it.") });
     }
     whoWindow(this);                       // everyone picks their name at the start
+  }
+
+  /** Photo to show for a player at the table (null = use the built-in portrait / silhouette). */
+  photoFor(p) {
+    if (p.human) return this.pid ? this.store.photo(this.pid) : null;
+    if (isPreset(p.name)) return null;                    // family and pets keep their portraits
+    return this.store.opponentPhoto(baseName(p.name));
+  }
+  /** Ask for a picture and save it for you (human) or a typed-in opponent; redraws the table. */
+  async addPhoto(forName = null) {
+    const url = await pickPhoto();
+    if (!url) return false;
+    const ok = forName == null ? this.store.setPhoto(this.pid, url) : this.store.setOpponentPhoto(baseName(forName), url);
+    if (!ok) { openWindow({ title: "Photo", body: h("p.msg", {}, "There isn't enough room in this browser to save that picture.") }); return false; }
+    this.table.requestRedraw();
+    return true;
+  }
+  removePhoto(forName = null) {
+    if (forName == null) this.store.setPhoto(this.pid, null); else this.store.setOpponentPhoto(baseName(forName), null);
+    this.table.requestRedraw();
   }
 
   playerName() { return this.pid ? this.store.get(this.pid).name : ""; }

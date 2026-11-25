@@ -141,3 +141,16 @@ table.score td.pts { font-weight: 700; padding-right: 26px; }
 /* Lifetime stats: the "vs" family columns shaded 20% darker than the level columns */
 table.stats td.opp { background: #c9c6bb; }
 table.stats th.opp { background: #bfb8a3; }
+
+/* player photos */
+.combo-sep { height: 1px; margin: 3px 6px; background: #b9b2a0; }
+td.pic { width: 46px; padding-right: 2px; }
+.photo-wrap { position: relative; display: inline-block; vertical-align: middle; }
+.win .photo-btn, .photo-btn { width: 40px; height: 50px; padding: 0; border: 1px solid #8f8774; border-radius: 6px; background: #e9e3d4; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
+.photo-btn img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; display: block; }
+.photo-btn .cam { font-size: 20px; opacity: .7; }
+.win .photo-btn:disabled { cursor: default; opacity: 1; }
+.photo-btn:disabled .cam { opacity: .25; }
+.win .photo-del, .photo-del { position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; padding: 0; border-radius: 50%; border: 1px solid #8f8774;
+  background: #fff; color: #a01818; font-size: 13px; line-height: 15px; cursor: pointer; }

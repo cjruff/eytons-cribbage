@@ -147,8 +147,13 @@ export class Table {
   }
   geometry() { return this.geoms[this.settings.board] || null; }
 
-  /** Portrait for a player: assets/portraits/<name>.webp / .png / .jpg (loaded once). */
-  portrait(name) {
+  /**
+   * Portrait for a player: a photo added in the game (yours, or one for an opponent you
+   * typed in), else assets/portraits/<name>.webp / .png / .jpg (loaded once).
+   */
+  portrait(name, player = null) {
+    const url = player && this.host.photoFor ? this.host.photoFor(player) : null;
+    if (url) return this._photoImage(url);
     const base = baseName(name);
     const pm = this.images.portraits;
     if (!(base in pm)) {
@@ -159,6 +164,18 @@ export class Table {
       })();
     }
     return pm[base];
+  }
+
+  _photoImage(url) {
+    const pc = this.images.photos || (this.images.photos = new Map());
+    if (!pc.has(url)) {
+      if (pc.size > 24) pc.clear();
+      pc.set(url, null);
+      const img = new Image();
+      img.onload = () => { pc.set(url, img); this.requestRedraw(); };
+      img.src = url;
+    }
+    return pc.get(url);
   }
 
   get delay() { return SPEEDS[this.settings.speed] || 750; }
@@ -819,8 +836,8 @@ export class Table {
   }
 
   // ----- sidebar: portraits + scores + log -----
-  drawPortrait(name, x1, y1, x2, y2, color) {
-    const img = this.portrait(name), p = this.p;
+  drawPortrait(name, x1, y1, x2, y2, color, player = null) {
+    const img = this.portrait(name, player), p = this.p;
     if (img) {
       const ctx = p.ctx;
       ctx.save();
@@ -854,7 +871,7 @@ export class Table {
       this.text(x1 + 10, y + 16, p.name, 15, true, "white", "w");
       this.text(x1 + 10, y + 38, p.human ? "Player" : p.level || "", 10, false, "#cfe3d2", "w");
       const py = y + 52;
-      this.drawPortrait(p.name, x1 + 8, py, x1 + 8 + S.pw, py + S.ph, p.color);
+      this.drawPortrait(p.name, x1 + 8, py, x1 + 8 + S.pw, py + S.ph, p.color, p);
       if (dealerKnown && i === e.dealer) {
         this.rrect(x2 - 80, py, x2 - 8, py + 24, 6, { fill: "#f4c542" });
         this.text(x2 - 44, py + 12, "DEALER", 10, true, "#222");
@@ -877,7 +894,7 @@ export class Table {
       const active = e.phase === "peg" && e.turn === i && !e.over;
       this.rrect(x1, y, x2, y + ch - 8, 12, { fill: shade(this.bg, active ? 0.5 : 0.7), outline: active ? "#f4c542" : shade(this.bg, 1.3), width: this.W(active ? 3 : 1) });
       const pw = S.pw || (ch - 24) * 0.78, ph = S.ph || ch - 24;
-      this.drawPortrait(p.name, x1 + 8, y + 8, x1 + 8 + pw, y + 8 + ph, p.color);
+      this.drawPortrait(p.name, x1 + 8, y + 8, x1 + 8 + pw, y + 8 + ph, p.color, p);
       const tx = x1 + pw + 18;
       this.text(tx, y + 20, p.name, 16, true, "white", "w");
       this.text(tx, y + 40, p.human ? "Player" : p.level || "", 11, false, "#cfe3d2", "w");

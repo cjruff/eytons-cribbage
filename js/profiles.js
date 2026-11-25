@@ -85,7 +85,7 @@ export class ProfileStore {
   remove(id) {
     this.index.list = this.index.list.filter((p) => p.id !== id);
     if (this.index.last === id) this.index.last = null;
-    for (const k of ["settings", "stats", "achievements"]) this.s.removeItem(`${PREFIX}${id}.${k}`);
+    for (const k of ["settings", "stats", "achievements", "photo"]) this.s.removeItem(`${PREFIX}${id}.${k}`);
     this._saveIndex();
   }
   select(id) { if (this.get(id)) { this.index.last = id; this._saveIndex(); } }
@@ -104,6 +104,23 @@ export class ProfileStore {
   raw(id) {
     return { settings: this._read(`${id}.settings`), stats: this._read(`${id}.stats`), achievements: this._read(`${id}.achievements`) };
   }
+  // ----- photos -----
+  /** This player's own photo (data URL) or null. */
+  photo(id) { const v = this._read(`${id}.photo`); return typeof v === "string" ? v : null; }
+  /** Set (or with null, remove) this player's photo.  False if there's no room to save it. */
+  setPhoto(id, url) {
+    if (!url) { this.s.removeItem(`${PREFIX}${id}.photo`); return true; }
+    return this._write(`${id}.photo`, url);
+  }
+  /** Photos for computer opponents you typed in yourself, by lower-case base name. */
+  opponentPhotos() { const v = this._read("photos"); return v && typeof v === "object" ? v : {}; }
+  opponentPhoto(base) { return this.opponentPhotos()[base] || null; }
+  setOpponentPhoto(base, url) {
+    const all = this.opponentPhotos();
+    if (url) all[base] = url; else delete all[base];
+    return this._write("photos", all);
+  }
+
   resetStats(id) { this.s.removeItem(`${PREFIX}${id}.stats`); }
   resetAchievements(id) { this.s.removeItem(`${PREFIX}${id}.achievements`); }
 
@@ -113,7 +130,8 @@ export class ProfileStore {
     const chosen = this.index.list.filter((p) => !ids || ids.includes(p.id));
     return {
       app: APP_ID, version: BACKUP_VERSION, exported: new Date().toISOString(),
-      profiles: chosen.map((p) => ({ name: p.name, created: p.created, ...this.raw(p.id) })),
+      profiles: chosen.map((p) => { const photo = this.photo(p.id); return { name: p.name, created: p.created, ...this.raw(p.id), ...(photo ? { photo } : {}) }; }),
+      photos: this.opponentPhotos(),
     };
   }
 
@@ -126,6 +144,9 @@ export class ProfileStore {
       throw new Error("That file isn't an Eyton's Cribbage backup.");
     }
     const report = [];
+    if (obj.photos && typeof obj.photos === "object") {
+      for (const [k, v] of Object.entries(obj.photos)) if (typeof v === "string" && v.startsWith("data:image/")) this.setOpponentPhoto(k, v);
+    }
     for (const prof of obj.profiles) {
       let name = cleanName(prof.name) || "Player";
       let target = this.findByName(name);
@@ -144,8 +165,9 @@ export class ProfileStore {
     return report;
   }
 
-  _load(id, { settings = null, stats = null, achievements = null }) {
+  _load(id, { settings = null, stats = null, achievements = null, photo = null }) {
     const p = this.get(id);
+    if (typeof photo === "string" && photo.startsWith("data:image/")) this.setPhoto(id, photo);
     if (settings) this.saveSettings(id, { ...settings, name: settings.name || p.name });
     if (stats && typeof stats === "object") this._write(`${id}.stats`, stats); else this.resetStats(id);
     if (achievements && typeof achievements === "object") {

@@ -2,7 +2,7 @@
 // New Game, Settings, Statistics, Achievements, Players & Backups, How to Play, About.
 // Code: (c) Corey J Ruff
 import { DIFFICULTIES } from "../ai.js";
-import { BOARD_STYLES, SPEEDS, CARD_BACKS, BACK_PRESETS, PEG_PALETTE, PRESET_OPPONENTS, forcedLevel } from "../settings.js";
+import { BOARD_STYLES, SPEEDS, CARD_BACKS, BACK_PRESETS, PEG_PALETTE, PRESET_OPPONENTS, FAMILY_OPPONENTS, PET_OPPONENTS, forcedLevel, isPreset, baseName } from "../settings.js";
 import { STAT_ROWS } from "../stats.js";
 import { ACHIEVEMENTS, CATEGORIES, TIER_NAMES, MEDAL_COLORS, MEDAL_DARK, medalImage } from "../achievements.js";
 import { openWindow, confirmBox, messageBox, h, esc, pickColour } from "./windows.js";
@@ -20,6 +20,7 @@ const select = (options, value, props = {}) => h("select", props, ...options.map
 /**
  * A text box with a dropdown that always lists every choice (like Python's Combobox):
  * pick a name, or type any other.  blankLabel = the first choice, which clears the box.
+ * A null in choices draws a divider line.
  */
 function combo(input, choices, blankLabel) {
   const btn = h("button.combo-btn", { type: "button", tabIndex: -1, "aria-label": "Show choices" }, "\u25be");
@@ -31,7 +32,8 @@ function combo(input, choices, blankLabel) {
   const open = () => {
     if (list || input.disabled) { close(); return; }
     list = h("div.combo-list", {}, h("button.combo-item.dim", { type: "button", on: { click: () => choose("") } }, blankLabel),
-      ...choices.map((c) => h("button.combo-item" + (c.toLowerCase() === input.value.trim().toLowerCase() ? ".on" : ""), { type: "button", on: { click: () => choose(c) } }, c)));
+      ...choices.map((c) => c == null ? h("div.combo-sep") :
+        h("button.combo-item" + (c.toLowerCase() === input.value.trim().toLowerCase() ? ".on" : ""), { type: "button", on: { click: () => choose(c) } }, c)));
     const r = wrap.getBoundingClientRect();
     Object.assign(list.style, { left: r.left + "px", top: r.bottom + 2 + "px", minWidth: r.width + "px" });
     document.body.append(list);
@@ -51,27 +53,63 @@ function combo(input, choices, blankLabel) {
   return wrap;
 }
 
+/**
+ * Square picture button for a player row.  who() gives the current name (null = you).
+ * Family and pets show their built-in portrait (locked); anyone else can have a photo
+ * from the camera, photo library or a file; the little x removes it.
+ */
+function photoButton(app, who) {
+  const img = h("img", { alt: "" });
+  const cam = h("span.cam", {}, "\u{1F4F7}");
+  const btn = h("button.photo-btn", { type: "button" }, img, cam);
+  const del = h("button.photo-del", { type: "button", title: "Remove photo" }, "\u00d7");
+  const wrap = h("span.photo-wrap", {}, btn, del);
+  const refresh = () => {
+    const name = who();
+    let src = null, locked = false, own = false;
+    if (name === null) { src = app.store.photo(app.pid); own = !!src; }
+    else if (!name.trim()) locked = true;
+    else if (isPreset(name)) { src = `assets/portraits/${encodeURIComponent(baseName(name))}.webp`; locked = true; }
+    else { src = app.store.opponentPhoto(baseName(name)); own = !!src; }
+    img.style.display = src ? "" : "none";
+    if (src) img.src = src;
+    cam.style.display = src ? "none" : "";
+    btn.disabled = locked;
+    btn.title = locked ? (name && name.trim() ? `${name.trim()} has a built-in picture` : "Type a name to add a photo")
+      : own ? "Change photo" : "Add a photo (camera, photo library or file)";
+    del.style.display = own ? "" : "none";
+  };
+  btn.addEventListener("click", async () => { if (await app.addPhoto(who())) refresh(); });
+  del.addEventListener("click", () => { app.removePhoto(who()); refresh(); });
+  wrap.refresh = refresh;
+  refresh();
+  return wrap;
+}
+
 // ------------------------------------------------------------- New Game
 /** Game setup: players, each computer's skill, peg colours, board.  start(newSettings) begins the game. */
 export function newGameWindow(app, { startup = false } = {}) {
   const s = app.settings;
   const nameLine = h("div.player-name", {}, app.playerName());
   const rows = [];
-  const table = h("table.setup", {}, h("tr", {}, ...["Player", "Computer skill", "Peg colour", ""].map((t) => h("th", {}, t))));
+  const table = h("table.setup", {}, h("tr", {}, ...["", "Player", "Computer skill", "Peg colour", ""].map((t) => h("th", {}, t))));
   for (let r = 0; r < 3; r++) {
     const who = r === 0 ? nameLine : h("input", { type: "text", maxlength: 16, value: s.cpu_names[r - 1] || "", placeholder: "(peg colour)" });
+    const pic = photoButton(app, r === 0 ? () => null : () => who.value);
     const skill = r === 0 ? h("span.dim", {}, "(you)") : select(DIFFICULTIES, s.levels[r - 1]);
     const colour = select(Object.keys(PEG_PALETTE), s.colors[r]);
     const swatch = h("span.swatch");
-    rows.push({ who, skill, colour, swatch });
-    table.append(h("tr", {}, h("td", {}, r === 0 ? who : combo(who, PRESET_OPPONENTS, "New Entry")), h("td", {}, skill), h("td", {}, colour), h("td", {}, swatch)));
+    rows.push({ who, skill, colour, swatch, pic });
+    table.append(h("tr", {}, h("td.pic", {}, pic), h("td", {}, r === 0 ? who : combo(who, [...FAMILY_OPPONENTS, null, ...PET_OPPONENTS], "New Entry")), h("td", {}, skill), h("td", {}, colour), h("td", {}, swatch)));
   }
   let players = s.players;
   const refresh = () => {
-    rows.forEach(({ who, skill, colour, swatch }, r) => {
+    rows.forEach(({ who, skill, colour, swatch, pic }, r) => {
       const active = r < players;
+      pic.refresh();
       if (r > 0) {
         who.disabled = !active;
+        if (!active) pic.querySelectorAll("button").forEach((b) => { b.disabled = true; });
         const lock = forcedLevel(who.value);               // e.g. Corey: Expert only
         if (lock) skill.value = lock;
         for (const opt of skill.options) opt.disabled = !!lock && opt.value !== lock;
@@ -89,7 +127,8 @@ export function newGameWindow(app, { startup = false } = {}) {
   const boardGroup = group("Board", radios("ng-board", BOARD_STYLES.map((b) => [b, b]), s.board));
   const body = [
     playersGroup,
-    group("Players", table, h("p.note", {}, "Pick a family opponent or type any name; blank = its peg colour.", h("br"),
+    group("Players", table, h("p.note", {}, "Pick family or a furry friend, or type any name; blank = its peg colour.", h("br"),
+      "Tap the picture box to add a photo (camera, photo library or file) for you or anyone you typed in.", h("br"),
       "Skill only changes how well a computer plays - never the cards.")),
     boardGroup,
   ];
@@ -141,10 +180,12 @@ export function statsWindow(app) {
   let mode = String(app.settings.players);
   const tableEl = h("table.stats");
   const best = h("p.best");
-  const cols = [...DIFFICULTIES, "All levels", ...PRESET_OPPONENTS];
   const fill = () => {
     const pl = mode === "all" ? null : +mode;
-    const buckets = [...DIFFICULTIES.map((d) => stats.aggregate(pl, d)), stats.aggregate(pl, null), ...PRESET_OPPONENTS.map((o) => stats.aggregate(pl, null, o))];
+    // family columns always; a pet's column appears once you've played them
+    const opps = [...FAMILY_OPPONENTS, ...PET_OPPONENTS.filter((o) => stats.aggregate(pl, null, o).games_played > 0)];
+    const cols = [...DIFFICULTIES, "All levels", ...opps];
+    const buckets = [...DIFFICULTIES.map((d) => stats.aggregate(pl, d)), stats.aggregate(pl, null), ...opps.map((o) => stats.aggregate(pl, null, o))];
     const allb = buckets[DIFFICULTIES.length];
     tableEl.innerHTML = "";
     tableEl.append(h("tr", {}, h("th", {}, "Statistic"), ...cols.map((c) => h("th" + (PRESET_OPPONENTS.includes(c) ? ".opp" : c === "All levels" ? ".all" : ""), {}, PRESET_OPPONENTS.includes(c) ? "vs " + c : c))));
@@ -240,8 +281,10 @@ export function playersWindow(app) {
     inp.addEventListener("change", async () => { const files = [...inp.files]; inp.remove(); if (files.length) await fn(files); });
     document.body.append(inp); inp.click();
   };
+  const myPic = photoButton(app, () => null);
   const body = [
     group("This player",
+      h("div.row", {}, myPic, h("span.note", {}, "Your picture at the table: tap the box to take a photo or pick one from your photos or files.")),
       h("div.row", {}, nameIn, h("button", { on: { click: () => {
         try { store.rename(app.pid, nameIn.value); app.changed(); say("Renamed."); } catch (err) { say(err.message, true); }
       } } }, "Rename"),
@@ -323,6 +366,7 @@ export function helpWindow() {
   openWindow({ title: "How to Play", width: "min(720px, 96vw)", cls: "tall help", body: [
     h("h3", {}, "Goal"), P("Be first to peg <b>121</b> points."),
     h("h3", {}, "New game (F2)"), P("Choose 2 or 3 players, a skill level for each computer, everyone's peg colour, and the board. With mixed skill levels, stats are filed under the strongest one."),
+    P("Opponents can be family, our furry friends (Eyton, Morgan, Nala, Rhys and Wally - they play, but they don't talk), or any name you type. Tap the picture box beside a player to add a photo from the camera, your photo library or a file. Family and pets keep their own pictures."),
     h("h3", {}, "Cut for deal"), P("Click any card in the face-down spread, then each computer cuts. Low card deals (ace is low). A tie means everyone cuts again."),
     h("h3", {}, "The deal"), P("<b>2 players:</b> 6 cards each, discard 2 to the crib.<br><b>3 players:</b> 5 cards each, one card goes straight to the crib, each player discards 1.<br>The crib belongs to the dealer. The deal rotates every hand. Tap cards to choose them (or drag them up), then press the Send button."),
     h("h3", {}, "The starter"), P('After discards the deck is cut and a starter card turned up. If it is a Jack the dealer pegs 2 ("His Heels").'),

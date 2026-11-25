@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import { ComputerAI, DIFFICULTIES } from "../js/ai.js";
 import { SeededRng } from "../js/rng.js";
-import { normalizeSettings, PRESET_OPPONENTS } from "../js/settings.js";
+import { normalizeSettings, FAMILY_OPPONENTS as PRESET_OPPONENTS } from "../js/settings.js";
 import { StatsStore, STAT_ROWS } from "../js/stats.js";
 import { AchievementTracker, seedFromStats, ACHIEVEMENTS } from "../js/achievements.js";
 import { GameSession } from "../js/session.js";
