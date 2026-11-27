@@ -204,6 +204,7 @@ export class CribbageEngine {
       for (const c of disc) this.cribFrom.set(c, i);
       p.kept = [...p.hand];
     });
+    this._emit("discards", {});                      // report only (bubbles)
   }
   humanDiscard(cards) {
     const p = this.players[this.human];

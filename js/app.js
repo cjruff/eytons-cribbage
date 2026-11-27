@@ -95,6 +95,7 @@ class App {
     this.settings.name = this.playerName();
     this.stats = this.store.stats(this.pid);
     this.tracker = this.store.achievements(this.pid, this.stats);
+    this.table.host.memory = this.store.memory(this.pid);
   }
   /** After an import/backup load: drop the current game without recording it, reload, start fresh. */
   async reloadPlayer() {

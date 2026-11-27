@@ -191,7 +191,7 @@ export class Table {
     if (tracker !== undefined) this.host.tracker = tracker;
     await this.board();
     this.session = new GameSession(settings, this.host.stats, this.host.tracker, {
-      greet, onSay: () => { this.requestRedraw(); setTimeout(() => this.requestRedraw(), 5050); },
+      greet, memory: this.host.memory, onSay: () => { this.requestRedraw(); setTimeout(() => this.requestRedraw(), 5050); },
     });
     this.engine = this.session.engine;
     this.hideTotal = false; this.countMsg = "";

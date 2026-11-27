@@ -8,7 +8,7 @@ import { Personalities } from "./personalities.js";
 export class GameSession {
   /**
    * settings: a profile's settings; stats: StatsStore; tracker: AchievementTracker (or null)
-   * opts: { onSay(pi, line, trigger), deckRng, aiRngs }
+   * opts: { onSay(pi, line, trigger), deckRng, aiRngs, memory (kept between games), voiceRng }
    */
   constructor(settings, stats, tracker, opts = {}) {
     this.settings = settings;
@@ -22,7 +22,7 @@ export class GameSession {
       names, deckRng: opts.deckRng, aiRngs: opts.aiRngs,
     });
     if (tracker) tracker.attach(this.engine);
-    this.voices = new Personalities(this.engine, opts.onSay || null, opts.now);
+    this.voices = new Personalities(this.engine, opts.onSay || null, opts.now, { memory: opts.memory, rng: opts.voiceRng });
     this.recorded = false;
     if (opts.greet !== false) this.voices.greet();
   }

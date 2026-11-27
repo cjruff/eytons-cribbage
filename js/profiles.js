@@ -85,7 +85,7 @@ export class ProfileStore {
   remove(id) {
     this.index.list = this.index.list.filter((p) => p.id !== id);
     if (this.index.last === id) this.index.last = null;
-    for (const k of ["settings", "stats", "achievements", "photo"]) this.s.removeItem(`${PREFIX}${id}.${k}`);
+    for (const k of ["settings", "stats", "achievements", "photo", "memory"]) this.s.removeItem(`${PREFIX}${id}.${k}`);
     this._saveIndex();
   }
   select(id) { if (this.get(id)) { this.index.last = id; this._saveIndex(); } }
@@ -104,6 +104,14 @@ export class ProfileStore {
   raw(id) {
     return { settings: this._read(`${id}.settings`), stats: this._read(`${id}.stats`), achievements: this._read(`${id}.achievements`) };
   }
+  /** Small things remembered between games for this player (e.g. Grandpa's losing streak). */
+  memory(id) {
+    return {
+      get: (k) => (this._read(`${id}.memory`) || {})[k],
+      set: (k, v) => { const m = this._read(`${id}.memory`) || {}; m[k] = v; this._write(`${id}.memory`, m); },
+    };
+  }
+
   // ----- photos -----
   /** This player's own photo (data URL) or null. */
   photo(id) { const v = this._read(`${id}.photo`); return typeof v === "string" ? v : null; }

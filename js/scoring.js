@@ -115,9 +115,9 @@ export function pegScore(seq) {
     else break;
   }
   if (k >= 2) {
-    const [p, name] = { 2: [2, "Pair"], 3: [6, "Pair royal"], 4: [12, "Double pair royal"] }[k];
+    const [p, name] = { 2: [2, "Pair"], 3: [6, "3 of a kind"], 4: [12, "4 of a kind"] }[k];
     pts += p;
-    reasons.push(`${name} for ${p}`);
+    reasons.push(`${name} for ${p}${k === 4 ? "!" : ""}`);
   }
   for (let length = seq.length; length > 2; length--) {
     const rs = seq.slice(-length).map((c) => RANK[c]).sort((a, b) => a - b);

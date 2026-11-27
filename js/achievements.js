@@ -76,6 +76,8 @@ export const ACHIEVEMENTS = [
   A("fifteen_two", "Fifteen Two", P, "Peg a count of 15", "peg_fifteens", [1, 50, 250, 1000, 2500], null, ""),
   A("fifteen_four", "Fifteen Four", P, "Peg 15 for 4 (fifteen plus a pair)", "peg_fifteen_fours", [1, 5, 25, 50, 100], null, ""),
   A("pair_royal", "Pair Royal", P, "Peg 6 for three of a kind", "peg_pair_royals", [1, 5, 25, 50, 100], null, ""),
+  A("how_to_peg", "Now That Is How To Peg", P, "Make 31 by playing the 3rd Ace in a row (8 points)", "peg_aces31_3", [1, 10, 25, 50, 100], null, ""),
+  A("really_how_to_peg", "Now That Is *Really* How To Peg", P, "Make 31 by playing the 4th Ace in a row (14 points)", "peg_aces31_4", [1, 10, 25, 50, 100], null, ""),
   A("double_pair_royal", "Quintuplets", P, "Peg 12 for four of a kind", "peg_double_royals", [1, 2, 3, 5, 10], null, ""),
   A("run_for_it", "Run for It", P, "Peg a run of 3+ cards", "peg_runs", [1, 25, 100, 250, 500], null, ""),
   A("last_laugh", "Last Laugh", P, "Win the game with a pegging point", "last_laughs", [1, 5, 10, 25, 50], null, ""),
@@ -252,8 +254,12 @@ export class AchievementTracker {
       this.inc("peg_fifteens");
       if (pts >= 4) this.inc("peg_fifteen_fours");
     }
-    if (text.includes("Double pair royal")) this.inc("peg_double_royals");
-    else if (text.includes("Pair royal")) this.inc("peg_pair_royals");
+    if (count === 31 && RANK[card] === 1) {                               // Now That Is (Really) How To Peg
+      const aces = sameRankTail(seq);
+      if (aces === 3) this.inc("peg_aces31_3"); else if (aces === 4) this.inc("peg_aces31_4");
+    }
+    if (text.includes("4 of a kind")) this.inc("peg_double_royals");
+    else if (text.includes("3 of a kind")) this.inc("peg_pair_royals");
     if (text.includes("Run of")) this.inc("peg_runs");
     // Counting Cards: a run threat (two consecutive ranks) was showing and our card leaves no run
     if (prev.length >= 2 && Math.abs(RANK[prev.at(-1)] - RANK[prev.at(-2)]) === 1 && !text.includes("Run of") && count < 31) {
@@ -443,3 +449,6 @@ export function seedFromStats(stats) {
     return seed;
   } catch { return {}; }
 }
+
+/** An achievement name without its *italic* marks (plain text). */
+export const plainName = (name) => name.replace(/\*([^*]+)\*/g, "$1");

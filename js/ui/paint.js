@@ -155,12 +155,26 @@ export class Painter {
     let widest = 0;
     if (o.justify === "center" && horiz !== "center") for (const l of lines) widest = Math.max(widest, this.measure(l, size, bold, family));
     lines.forEach((l, i) => {
+      if (/\*[^*]+\*/.test(l)) { this._richLine(l, x, top + lh * (i + 0.5), size, bold, family, horiz); return; }
       let lx = x, align = horiz;
       if (o.justify === "center" && horiz === "left") { lx = x + widest / 2; align = "center"; }
       ctx.textAlign = align;
       ctx.fillText(l, this.X(lx), this.Y(top + lh * (i + 0.5)));
     });
     return total;
+  }
+
+  /** One line with *italic* words (e.g. an achievement name), drawn piece by piece. */
+  _richLine(l, x, y, size, bold, family, horiz) {
+    const ctx = this.ctx;
+    const parts = l.split(/(\*[^*]+\*)/).filter(Boolean).map((t) => t.startsWith("*") && t.endsWith("*") && t.length > 2
+      ? { t: t.slice(1, -1), f: "italic " + this.font(size, bold, family) } : { t, f: this.font(size, bold, family) });
+    let w = 0;
+    for (const q of parts) { ctx.font = q.f; q.w = ctx.measureText(q.t).width; w += q.w; }
+    let px = this.X(x) - (horiz === "center" ? w / 2 : horiz === "right" ? w : 0);
+    ctx.textAlign = "left";
+    for (const q of parts) { ctx.font = q.f; ctx.fillText(q.t, px, this.Y(y)); px += q.w; }
+    ctx.font = this.font(size, bold, family);
   }
 
   /** Clickable area (logical coords).  card: a card id makes it draggable. */

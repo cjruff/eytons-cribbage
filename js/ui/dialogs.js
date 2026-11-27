@@ -244,7 +244,7 @@ export function achievementsWindow(app, highlight = []) {
         const dates = (tracker.data.unlocked[a.id] || {}).dates || [];
         list.append(h("div.ach-row" + (isNew ? ".new" : have ? ".got" : ""), {},
           medal(20, bestTier, !!have),
-          h("div.ach-text", {}, h("div.ach-name", {}, a.name + (isNew ? "   NEW!" : "")), h("div.ach-desc", {}, a.desc + (a.note ? `   (${a.note})` : ""))),
+          h("div.ach-text", {}, h("div.ach-name", {}, ...a.name.split(/(\*[^*]+\*)/).filter(Boolean).map((t) => /^\*.+\*$/.test(t) ? h("i", {}, t.slice(1, -1)) : t), isNew ? "   NEW!" : ""), h("div.ach-desc", {}, a.desc + (a.note ? `   (${a.note})` : ""))),
           h("div.ach-pips", {}, ...a.tiers.map((th, i) => h("span.pip", {}, medal(10, a.tierName(i), i < have), h("small", {}, a.tiers.length > 1 || th > 1 ? th.toLocaleString("en-US") : "")))),
           h("div.ach-prog", {}, h("div", {}, tracker.progressText(a)),
             h("div.bar", {}, h("div", { style: { width: `${frac * 100}%`, background: MEDAL_COLORS[a.tierName(Math.min(have, a.tiers.length - 1))] } })),
@@ -375,7 +375,7 @@ export function helpWindow() {
     P("After 31 or a Go the count starts again at 0."),
     h("h3", {}, "The show"), P('Hands are counted left of the dealer first, then the dealer\'s hand, then the crib, each together with the starter. Everything is counted automatically - press "Show Count" to see the itemised breakdown.'),
     sc([["Each combination totalling 15", 2, "Each pair", 2], ["Each run of 3 or more", "1 per card"], ["Flush: 4 in hand (5 with starter); the crib needs all 5", ""], ["His Nobs: Jack in hand of the starter's suit", 1]]),
-    h("h3", {}, "Achievements"), P('92 achievements with Bronze / Silver / Gold / Platinum (and a few Diamond) medals. Unlocks pop up during play, are listed on the win/lose screen, and can be browsed any time from Game &gt; Achievements. Settings &gt; "Count my own hands" asks you to count your hand before it is revealed.'),
+    h("h3", {}, "Achievements"), P('94 achievements with Bronze / Silver / Gold / Platinum / Diamond medals. Unlocks pop up during play, are listed on the win/lose screen, and can be browsed any time from Game &gt; Achievements. Settings &gt; "Count my own hands" asks you to count your hand before it is revealed.'),
     h("h3", {}, "Skunks"), P("Lose with fewer than 91 points = skunk; fewer than 61 = double skunk. The board marks these lines with S and SS."),
     h("h3", {}, "Computer skill"),
     sc([["Easy", "makes beginner choices and often misses pegging chances"], ["Medium", "keeps the best-looking hand and takes points when it sees them"],

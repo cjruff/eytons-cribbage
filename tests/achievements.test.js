@@ -39,7 +39,7 @@ function fake({ n = 2, dealer = 1 } = {}) {
 const play = (pi, prev, reasons) => ({ pi, card: 0, prev, seq: [], count: 10, pts: 0, reasons });
 
 test("list: 87 achievements; Pair-a-dice gone; renames; Diamond tier", () => {
-  assert.equal(ACHIEVEMENTS.length, 92);
+  assert.equal(ACHIEVEMENTS.length, 94);
   assert.ok(!BY_ID.pair_a_dice);
   assert.equal(BY_ID.agony.name, "The Unthinkable");
   assert.equal(BY_ID.down_to_wire.name, "Ha, Ha... Suck it!");
@@ -364,4 +364,132 @@ test("our furry friends play but never talk", () => {
     assert.deepEqual(said, [], pet);
     assert.deepEqual(v.personality(1), {}, pet);
   }
+});
+
+// ---------------------------------------------------------------- family lines, round 3
+const voiceGame = (names, scores = null) => {
+  const e = { n: names.length, human: 0, starter: null, played: [], winner: null, observers: [], cribFrom: new Map(),
+    players: names.map((nm, i) => ({ name: nm, human: i === 0, score: scores ? scores[i] : 0 })) };
+  return e;
+};
+const showItems = async (hand, starter) => (await import("../js/scoring.js")).handBreakdown(hand, starter, false);
+
+test("pegging shows '3 of a kind' and '4 of a kind!'", () => {
+  assert.ok(pegScore([card(5), card(5, 1), card(5, 2)])[1].includes("3 of a kind for 6"));
+  assert.ok(pegScore([card(3), card(3, 1), card(3, 2), card(3, 3)])[1].includes("4 of a kind for 12!"));
+});
+
+test("Grandpa: luckiest person only after losing to you 3 games running", () => {
+  const mem = new Map();
+  const memory = { get: (k) => mem.get(k), set: (k, v) => mem.set(k, v) };
+  const game = (youWin) => {
+    const said = [];
+    const e = voiceGame(["You", "Grandpa"], [100, 100]);
+    const v = new Personalities(e, (pi, line) => said.push(line), undefined, { memory });
+    e.winner = youWin ? 0 : 1; e.players[e.winner].score = 121;
+    v.onEvent("award", { pi: e.winner, pts: 21, kind: "show" });
+    return said;
+  };
+  assert.ok(!game(true).includes("You are the luckiest person I know"));
+  assert.ok(!game(true).includes("You are the luckiest person I know"));
+  assert.ok(game(true).includes("You are the luckiest person I know"));     // 3rd in a row
+  assert.ok(game(true).includes("You are the luckiest person I know"));     // and while it lasts
+  assert.ok(game(false).includes("Hot Damn!"));                              // he wins: streak over
+  assert.ok(!game(true).includes("You are the luckiest person I know"));
+});
+
+test("Grandma: skunked by you costs 50 cents", () => {
+  for (const [score, line] of [[80, "You skunked me!  Here's 50 cents."], [100, "Here's your quarter"]]) {
+    const said = [];
+    const e = voiceGame(["You", "Grandma"], [121, score]);
+    const v = new Personalities(e, (pi, l) => said.push(l));
+    e.winner = 0; v.onEvent("award", { pi: 0, pts: 10, kind: "show" });
+    assert.deepEqual(said, [line]);
+  }
+});
+
+test("Grandpa: High Hand at least", async () => {
+  const run = (behindBy, grandpaPegs, othersPeg, gpHand, youHand) => {
+    const said = [];
+    const e = voiceGame(["You", "Grandpa"], [60, 60 - behindBy]);
+    const v = new Personalities(e, (pi, l) => said.push(l));
+    v.onEvent("round", {});
+    if (othersPeg) v.onEvent("award", { pi: 0, pts: othersPeg, kind: "peg" });
+    if (grandpaPegs) v.onEvent("award", { pi: 1, pts: grandpaPegs, kind: "go" });
+    e.players[0].score += othersPeg;
+    v.onEvent("pegdone", {});
+    v.onEvent("show", { pi: 0, kind: "hand", items: [], total: youHand });
+    v.onEvent("show", { pi: 1, kind: "hand", items: [], total: gpHand });
+    v.onEvent("show", { pi: 1, kind: "crib", items: [], total: 2, cards: [] });
+    return said.includes("High Hand at least");
+  };
+  assert.ok(run(30, 0, 5, 12, 8));          // 30 behind + 5 more pegged by you = 35 behind
+  assert.ok(!run(20, 0, 5, 12, 8));         // only 25 behind
+  assert.ok(!run(40, 1, 5, 12, 8));         // he pegged a point
+  assert.ok(!run(40, 0, 4, 12, 8));         // others pegged only 4
+  assert.ok(!run(40, 0, 6, 8, 8));          // tied hand isn't the high hand
+});
+
+test("Grandma / Sue: hold this crazy - at least once, never more than 3", () => {
+  for (const [rng, expect] of [[() => 0, 3], [() => 0.99, 1]]) {
+    const said = [];
+    const e = voiceGame(["You", "Sue", "Grandma"]);
+    const v = new Personalities(e, (pi, l) => said.push(`${e.players[pi].name}: ${l}`), undefined, { rng });
+    for (let k = 0; k < 9; k++) v.onEvent("discards", {});
+    for (const who of ["Sue", "Grandma"]) assert.equal(said.filter((x) => x === `${who}: I'm going to hold this crazy`).length, expect);
+  }
+  const said = [];
+  const e = voiceGame(["You", "Larry"]);
+  const v = new Personalities(e, (pi, l) => said.push(l), undefined, { rng: () => 0 });
+  for (let k = 0; k < 5; k++) v.onEvent("discards", {});
+  assert.deepEqual(said, []);
+});
+
+test("Sue / Larry: losing to Corey by 36+, once a game; Larry's Fiddle sticks", () => {
+  for (const human of ["Corey", "Pat"]) {
+    const said = [];
+    const e = voiceGame([human, "Sue", "Larry"], [50, 10, 14]);
+    if (human === "Pat") e.players.push({ name: "Corey", human: false, score: 50 }), e.n = 4;
+    const v = new Personalities(e, (pi, l) => said.push(`${e.players[pi].name}: ${l}`));
+    const cp = human === "Corey" ? 0 : 3;
+    e.players[cp].score = 52; v.onEvent("award", { pi: cp, pts: 2, kind: "peg" });   // Sue 42 behind, Larry 38
+    e.players[cp].score = 60; v.onEvent("award", { pi: cp, pts: 8, kind: "show" });
+    assert.equal(said.filter((x) => x === "Sue: My son was always far superior at this game than I").length, 1);
+    assert.equal(said.filter((x) => x === "Larry: My son was always far superior at this game than I").length, 1);
+  }
+  const said = [];
+  const e = voiceGame(["You", "Larry"]);
+  new Personalities(e, (pi, l) => said.push(l)).onEvent("show", { pi: 1, kind: "hand", items: [], total: 0 });
+  assert.deepEqual(said, ["Oh Fiddle sticks"]);
+});
+
+test("anyone: Double run of 5 for 10 (10-J-J-Q-K, no nobs); Grandpa's new cadence", async () => {
+  const { handBreakdown } = await import("../js/scoring.js");
+  const sayFor = (hand, starter, who = "Uncle Bob") => {
+    const said = [];
+    const e = voiceGame(["You", who]);
+    const items = handBreakdown(hand, starter, false);
+    new Personalities(e, (pi, l) => said.push(l)).onEvent("show", { pi: 1, kind: "hand", items, total: items.reduce((t, x) => t + x[2], 0) });
+    return said;
+  };
+  assert.deepEqual(sayFor([card(10, 0), card(11, 1), card(11, 2), card(12, 3)], card(13, 0)), ["Double run of 5 for 10"]);
+  assert.deepEqual(sayFor([card(10, 0), card(11, 0), card(11, 2), card(12, 3)], card(13, 0)), []);   // nobs makes 11
+  assert.deepEqual(sayFor([card(10, 0), card(11, 1), card(11, 2), card(12, 3)], card(13, 0), "Nala"), []);   // pets stay quiet
+  // Grandpa: 5's line on a player's 13th five, double runs on the 8th
+  const said = [];
+  const e = voiceGame(["You", "Grandpa"]);
+  const v = new Personalities(e, (pi, l) => said.push(l));
+  for (let k = 1; k <= 13; k++) { e.played = [card(2), card(5)]; v.onEvent("play", { pi: 0, card: card(5, k % 4) }); assert.equal(said.length, k === 13 ? 1 : 0); }
+});
+
+test("Now That Is (Really) How To Peg: 31 on the 3rd / 4th Ace in a row", () => {
+  const { e, ev, m } = fake();
+  ev("round");
+  const A = [card(1, 0), card(1, 1), card(1, 2), card(1, 3)];
+  ev("play", { pi: 0, card: A[2], prev: [card(10), card(9), card(9, 1), A[0], A[1]], seq: [card(10), card(9), card(9, 1), A[0], A[1], A[2]], count: 31, pts: 8, reasons: ["Thirty-one for 2", "3 of a kind for 6"] });
+  ev("play", { pi: 0, card: A[3], prev: [card(10), card(10, 1), card(3), A[0], A[1], A[2]], seq: [card(10), card(10, 1), card(3), ...A], count: 31, pts: 14, reasons: ["Thirty-one for 2", "4 of a kind for 12!"] });
+  ev("play", { pi: 1, card: A[2], prev: [], seq: [card(10), card(9), card(9, 1), A[0], A[1], A[2]], count: 31, pts: 8, reasons: [] });   // computer's: no
+  assert.deepEqual([m.peg_aces31_3, m.peg_aces31_4, m.peg_pair_royals, m.peg_double_royals], [1, 1, 1, 1]);
+  assert.equal(BY_ID.really_how_to_peg.tiers.join(), "1,10,25,50,100");
+  assert.equal(e.n, 2);
 });
