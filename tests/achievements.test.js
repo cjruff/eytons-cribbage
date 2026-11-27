@@ -275,7 +275,7 @@ test("Lori says Heeeeey when anyone's front peg lands on 69; Alex's new losing l
   e.players[2].score = 75; v.onEvent("award", { pi: 2, pts: 6, kind: "peg" });
   assert.deepEqual(said, ["Lori: Heeeeey", "Lori: Heeeeey"]);
   e.players[0].score = 121; e.winner = 0; v.onEvent("award", { pi: 0, pts: 52, kind: "hand" });
-  assert.ok(said.includes("Alex: Well, we don't play this at Widener"));
+  assert.ok(said.includes("Alex: Well, we don't play this at Widener") || said.includes("Alex: I'd beat you at Fortnite"));
 });
 
 test("Traditional Loop is retired: saved settings move to the 29 Board", async () => {
@@ -492,4 +492,14 @@ test("Now That Is (Really) How To Peg: 31 on the 3rd / 4th Ace in a row", () => 
   assert.deepEqual([m.peg_aces31_3, m.peg_aces31_4, m.peg_pair_royals, m.peg_double_royals], [1, 1, 1, 1]);
   assert.equal(BY_ID.really_how_to_peg.tiers.join(), "1,10,25,50,100");
   assert.equal(e.n, 2);
+});
+
+test("Jack loses: I'd beat you at Fortnite; Alex picks Widener or Fortnite", () => {
+  for (const [who, r, line] of [["Jack", 0, "I'd beat you at Fortnite"], ["Alex", 0, "Well, we don't play this at Widener"], ["Alex", 0.9, "I'd beat you at Fortnite"]]) {
+    const said = [];
+    const e = voiceGame(["You", who], [121, 100]);
+    const v = new Personalities(e, (pi, l) => said.push(l), undefined, { rng: () => r });
+    e.winner = 0; v.onEvent("award", { pi: 0, pts: 10, kind: "show" });
+    assert.deepEqual(said, [line], who);
+  }
 });

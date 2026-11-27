@@ -18,6 +18,7 @@ const SEE_ONE = "See one, play one";
 /** Lines every computer player has, family or not (a family member's own line wins). */
 export const EVERYONE = { see_one: SEE_ONE, double_run_five: "Double run of 5 for 10" };
 const CRAZY = "I'm going to hold this crazy";
+const FORTNITE = "I'd beat you at Fortnite";
 export const PERSONALITIES = {
   grandpa: {
     double_run: "You get more double runs than anyone I know",
@@ -38,8 +39,8 @@ export const PERSONALITIES = {
     see_one: SEE_ONE,
   },
   larry: { lose: "Waaaaah, I don't like to lose", zero_count: "Oh Fiddle sticks", son: "My son was always far superior at this game than I", see_one: SEE_ONE },
-  alex: { devil: "The Devil", start: NEVER_PLAYED, lose: "Well, we don't play this at Widener" },
-  jack: { devil: "The Devil", start: NEVER_PLAYED, lose: NEVER_PLAYED, thinking: "duuuuur..." },
+  alex: { devil: "The Devil", start: NEVER_PLAYED, lose: ["Well, we don't play this at Widener", FORTNITE] },   // one or the other
+  jack: { devil: "The Devil", start: NEVER_PLAYED, lose: FORTNITE, thinking: "duuuuur..." },
   lori: { start: NEVER_PLAYED, lose: NEVER_PLAYED, sixty_nine: "Heeeeey" },
   corey: { see_one: SEE_ONE, devil: "The Devil" },
   sue: { see_one: SEE_ONE, crazy: CRAZY, son: "My son was always far superior at this game than I" },
@@ -79,7 +80,8 @@ export class Personalities {
   thinking(pi) { return this.personality(pi).thinking || "thinking..."; }
 
   say(pi, trigger) {
-    const line = this.personality(pi)[trigger];
+    let line = this.personality(pi)[trigger];
+    if (Array.isArray(line)) line = line[Math.floor(this.rng() * line.length)];   // several lines: pick one
     if (!line) return;
     this.bubbles.set(pi, { line, until: this.now() + BUBBLE_SECONDS * 1000 });
     if (this.onSay) this.onSay(pi, line, trigger);
