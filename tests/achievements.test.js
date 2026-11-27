@@ -430,13 +430,15 @@ test("Grandpa: High Hand at least", async () => {
   assert.ok(!run(40, 0, 6, 8, 8));          // tied hand isn't the high hand
 });
 
-test("Grandma / Sue: hold this crazy - at least once, never more than 3", () => {
-  for (const [rng, expect] of [[() => 0, 3], [() => 0.99, 1]]) {
+test("Grandma / Sue: hold this crazy - once a game, never in the first 5 hands", () => {
+  for (const [rng, hand] of [[() => 0, 6], [() => 0.99, 8]]) {
     const said = [];
     const e = voiceGame(["You", "Sue", "Grandma"]);
     const v = new Personalities(e, (pi, l) => said.push(`${e.players[pi].name}: ${l}`), undefined, { rng });
-    for (let k = 0; k < 9; k++) v.onEvent("discards", {});
-    for (const who of ["Sue", "Grandma"]) assert.equal(said.filter((x) => x === `${who}: I'm going to hold this crazy`).length, expect);
+    for (let k = 1; k <= 12; k++) {
+      v.onEvent("discards", {});
+      for (const who of ["Sue", "Grandma"]) assert.equal(said.filter((x) => x === `${who}: I'm going to hold this crazy`).length, k >= hand ? 1 : 0, `${who} hand ${k}`);
+    }
   }
   const said = [];
   const e = voiceGame(["You", "Larry"]);

@@ -11,8 +11,9 @@ export const LUCKY_STREAK = 3;           // Grandpa: "luckiest person" once he's
 export const HIGH_HAND_BEHIND = 30;      // Grandpa: "High Hand at least" when behind by more than this...
 export const HIGH_HAND_OTHERS_PEG = 5;   // ...pegged nothing while the others pegged at least this, and has the high hand
 export const SON_BEHIND = 35;            // Sue / Larry: losing to Corey by more than this
-export const CRAZY_MAX = 3;              // Grandma / Sue: "hold this crazy" at most this many times a game
-export const CRAZY_CHANCE = 0.3;         // ...on any one discard (and for sure by their 3rd discard if not yet said)
+export const CRAZY_FROM_HAND = 6;        // Grandma / Sue: "hold this crazy" once a game, never in the first 5 hands
+export const CRAZY_CHANCE = 0.3;         // ...a chance on each discard from hand 6
+export const CRAZY_SURE_BY = 8;          // ...and for sure by hand 8 if the game gets that far
 const NEVER_PLAYED = "Well, I've never played this game before";
 const SEE_ONE = "See one, play one";
 /** Lines every computer player has, family or not (a family member's own line wins). */
@@ -133,12 +134,12 @@ export class Personalities {
       const sc = e.players.map((p) => p.score);
       this.round.behind = sc.map((v, i) => Math.max(...sc.filter((_, j) => j !== i)) - v);
     } else if (ev === "discards") {
-      // Grandma / Sue: "I'm going to hold this crazy" - random, at least once (by their 3rd discard), never more than 3
+      // Grandma / Sue: "I'm going to hold this crazy" - once a game each, not before hand 6, for sure by hand 8
       for (let i = 0; i < e.n; i++) {
         if (!this.personality(i).crazy) continue;
         const c = this.crazy.get(i) || { said: 0, seen: 0 };
-        c.seen++;
-        if (c.said < CRAZY_MAX && ((c.said === 0 && c.seen >= 3) || this.rng() < CRAZY_CHANCE)) { c.said++; this.say(i, "crazy"); }
+        c.seen++;                                           // = this hand's number (one discard per hand)
+        if (!c.said && c.seen >= CRAZY_FROM_HAND && (c.seen >= CRAZY_SURE_BY || this.rng() < CRAZY_CHANCE)) { c.said = 1; this.say(i, "crazy"); }
         this.crazy.set(i, c);
       }
     }
