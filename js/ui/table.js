@@ -201,6 +201,7 @@ export class Table {
     this.pegDisp = this.engine.players.map(() => [-1, 0]);
     this.anim = null;
     this.overlay = null;
+    this.resultsShown = false;
     this.flash = "";
     this.busy = false;
     this.toasts = [];
@@ -1278,7 +1279,19 @@ export class Table {
     labels.forEach(([lbl, cb, prim], i) => this.button(bx + i * (bw + gap), y2 - 76, bw, 56, lbl, cb, prim, true, 16));
   }
 
+  /** Game over: the results card is an HTML window (resultsWindow).  If it's closed, a button brings it back. */
   drawGameover() {
+    if (this.host.showResults) {
+      if (!this.resultsShown) { this.resultsShown = true; setTimeout(() => this.host.showResults(), 0); return; }
+      if (!this.host.resultsOpen?.()) {
+        const [x1, y1, x2, y2] = this.L.gameover, cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+        this.button(cx - 110, cy - 28, 220, 56, "Show results", () => this.host.showResults(), true, true, 17);
+      }
+      return;
+    }
+    this._drawGameoverCanvas();
+  }
+  _drawGameoverCanvas() {
     if (this.L.name === "phone") { this._drawGameoverPhone(); return; }
     const e = this.engine, res = e.result();
     const [x1, y1, x2, y2] = this.L.gameover;

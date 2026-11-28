@@ -10,7 +10,7 @@ import hashlib, os, pathlib, json
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SKIP_DIRS = {"parity", "tests", "tools", "node_modules", ".git", ".github"}
 SKIP_FILES = {"sw.js", "package.json", "README.md", "demo.html", "players.html", "play.html"}
-KEEP_EXT = {".html", ".js", ".css", ".json", ".webp", ".png", ".jpg", ".jpeg", ".webmanifest", ".ico"}
+KEEP_EXT = {".html", ".js", ".css", ".json", ".webp", ".png", ".jpg", ".jpeg", ".webmanifest", ".ico"}   # how-to-play.pdf is opened from the site, not kept offline
 
 files, digest = [], hashlib.sha256()
 for p in sorted(ROOT.rglob("*")):

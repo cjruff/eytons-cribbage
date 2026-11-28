@@ -5,7 +5,7 @@ import { BOARD_STYLES, BG_PRESETS, CARD_BACKS, BACK_PRESETS, normalizeSettings, 
 import { pickPhoto } from "./photo.js";
 import { Table } from "./ui/table.js";
 import { buildMenuBar, openWindow, confirmBox, windowOpen, pickColour, h } from "./ui/windows.js";
-import { newGameWindow, settingsWindow, statsWindow, achievementsWindow, playersWindow, whoWindow, aboutWindow, helpWindow } from "./ui/dialogs.js";
+import { newGameWindow, settingsWindow, statsWindow, achievementsWindow, playersWindow, whoWindow, aboutWindow, helpWindow, resultsWindow } from "./ui/dialogs.js";
 
 const { storage, persistent } = browserStorage();
 
@@ -22,6 +22,8 @@ class App {
       askCount: (what) => this.askCount(what),
       onYouLose: () => this.youLose(),
       onGameOverButton: (name) => this.gameOverButton(name),
+      showResults: () => { if (!this.resultsWin) this.resultsWin = resultsWindow(this); },
+      resultsOpen: () => !!this.resultsWin,
       onChange: () => this.changed(),
       photoFor: (p) => this.photoFor(p),
     });

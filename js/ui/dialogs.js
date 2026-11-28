@@ -86,6 +86,19 @@ function photoButton(app, who) {
   return wrap;
 }
 
+/** Save a JSON file to the device's downloads. */
+function downloadJson(obj, fname) {
+  const a = h("a", { href: URL.createObjectURL(new Blob([JSON.stringify(obj, null, 1)], { type: "application/json" })), download: fname });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+}
+const today = () => new Date().toISOString().slice(0, 10);
+const fileName = (app, what) => `EytonsCribbage-${app.playerName().replace(/[^\w-]+/g, "_")}-${what}-${today()}.json`;
+export const exportStats = (app) => downloadJson(app.store.raw(app.pid).stats || {}, fileName(app, "stats"));
+export const exportAchievements = (app) => downloadJson(app.store.raw(app.pid).achievements || { metrics: {}, unlocked: {}, state: {} }, fileName(app, "achievements"));
+/** An achievement name with its *italic* words as <i>. */
+const richName = (name) => name.split(/(\*[^*]+\*)/).filter(Boolean).map((t) => /^\*.+\*$/.test(t) ? h("i", {}, t.slice(1, -1)) : t);
+
 // ------------------------------------------------------------- New Game
 export const FAMILY_LABEL = "Rouech / Ruff Family";
 export const PETS_LABEL = "Furry Friends";
@@ -245,6 +258,65 @@ export function newGameWindow(app, { startup = false } = {}) {
   return win;
 }
 
+// ------------------------------------------------------------- Game over
+/**
+ * The results card after a game (green, like the start screen).  Medals earned this game are
+ * shown as pictures: hover (or tap) one to see what it was for.
+ */
+export function resultsWindow(app) {
+  const e = app.table.engine, res = e.result(), w = e.players[e.winner];
+  let sub = "";
+  if (res.won && res.skunkGiven) sub = res.skunkGiven === "double" ? "Double skunk!" : "Skunk!";
+  else if (!res.won && res.skunked) sub = res.skunked === "double" ? "You were double skunked" : "You were skunked";
+  const scores = h("div.res-scores", {}, ...[...e.players].sort((a, b) => b.score - a.score).map((p) =>
+    h("div.res-row" + (p === w ? ".top" : ""), {}, h("span.dot", { style: { background: p.color } }), h("span.nm", {}, p.name), h("span.sc", {}, String(p.score)))));
+  const b = app.stats.aggregate(e.n, e.difficulty);
+  const mixed = new Set(e.levels).size > 1;
+  const record = h("p.res-record", {}, `Your lifetime record vs ${mixed ? e.levels.join(" & ") : e.difficulty} (${e.n} players): `, h("b", {}, `${b.wins} - ${b.losses}`),
+    mixed ? ` (filed under ${e.difficulty})` : "");
+  const nw = app.tracker ? app.tracker.newThisGame : [];
+  const tiles = nw.map(([a, t]) => {
+    const tn = a.tierName(t);
+    const target = a.tiers[t];
+    const tile = h("button.medal-tile", { type: "button", "aria-label": `${a.name.replace(/\*/g, "")}, ${tn}` },
+      h("img", { src: medalImage(tn), alt: "" }),
+      h("span.mt-name", {}, ...richName(a.name)), h("span.mt-tier", {}, tn),
+      h("span.tip", {}, h("b", {}, ...richName(a.name), ` \u00b7 ${tn}`), h("span", {}, a.desc),
+        a.tiers.length > 1 ? h("small", {}, `This level: ${target.toLocaleString("en-US")}`) : null));
+    const tip = tile.querySelector(".tip");
+    const showTip = (on) => {
+      medals.querySelectorAll(".tip").forEach((x) => { x.style.display = "none"; });
+      if (!on) return;
+      tip.style.display = "block";
+      const r = tile.getBoundingClientRect(), th = tip.offsetHeight, tw = tip.offsetWidth;
+      tip.style.left = `${Math.max(8, Math.min(innerWidth - tw - 8, r.left + r.width / 2 - tw / 2))}px`;
+      tip.style.top = `${r.top - th - 8 >= 8 ? r.top - th - 8 : Math.min(innerHeight - th - 8, r.bottom + 8)}px`;
+    };
+    tile.addEventListener("pointerenter", (ev) => { if (ev.pointerType === "mouse") showTip(true); });
+    tile.addEventListener("pointerleave", (ev) => { if (ev.pointerType === "mouse") showTip(false); });
+    tile.addEventListener("click", () => showTip(tip.style.display !== "block"));
+    return tile;
+  });
+  const medals = h("div.res-medals", {}, ...tiles);
+  const go = (name) => () => { win.close(); app.gameOverButton(name); };
+  const body = h("div.res-card", {},
+    h("img.hero", { src: "assets/eyton-setup.webp", alt: "" }),
+    h("h1" + (res.won ? ".won" : ""), {}, res.won ? "You win!" : `${w.name} wins`),
+    sub ? h("p.res-sub", {}, sub) : null,
+    h("div.res-cols", {},
+      h("div.res-left", {}, scores, record),
+      h("div.res-right", {}, h("h3", {}, nw.length ? `New medals this game: ${nw.length}` : "No new medals this game"),
+        nw.length ? h("p.res-hint", {}, "Hover over a medal (or tap it) to see what it was for.") : null, medals)),
+    h("div.res-buttons", {},
+      h("button.deal", { type: "button", on: { click: go("new") } }, "New Game"),
+      h("button.more", { type: "button", on: { click: () => achievementsWindow(app, nw.map(([a]) => a.id)) } }, "Achievements"),
+      h("button.more", { type: "button", on: { click: () => statsWindow(app) } }, "Statistics"),
+      h("button.more", { type: "button", on: { click: () => win.close() } }, "See the table")));
+  const win = openWindow({ title: "Results", width: "min(760px, 96vw)", cls: "setup.results", backCls: "results-back", body, buttons: [],
+    onClose: () => { app.resultsWin = null; app.table.requestRedraw(); } });
+  return win;
+}
+
 // ------------------------------------------------------------- Settings
 export function settingsWindow(app) {
   const s = app.settings;
@@ -294,8 +366,8 @@ export function statsWindow(app) {
     if (await confirmBox("Reset statistics", "Erase ALL lifetime statistics?\nThis cannot be undone.")) { stats.reset(); fill(); app.changed(); }
     return false;
   };
-  openWindow({ title: `Lifetime Statistics - ${app.playerName()}`, width: "min(1180px, 96vw)", cls: "tall", body,
-    buttons: [["Reset stats...", reset, false, true], ["Close", null, true]] });
+  openWindow({ title: `Lifetime Statistics - ${app.playerName()}`, width: "min(1180px, 96vw)", cls: "tall.green", body,
+    buttons: [["Reset stats...", reset, false, true], ["Export stats", () => { exportStats(app); return false; }], ["Close", null, true]] });
 }
 
 // ------------------------------------------------------------- Achievements
@@ -337,7 +409,7 @@ export function achievementsWindow(app, highlight = []) {
         const dates = (tracker.data.unlocked[a.id] || {}).dates || [];
         list.append(h("div.ach-row" + (isNew ? ".new" : have ? ".got" : ""), {},
           medal(20, bestTier, !!have),
-          h("div.ach-text", {}, h("div.ach-name", {}, ...a.name.split(/(\*[^*]+\*)/).filter(Boolean).map((t) => /^\*.+\*$/.test(t) ? h("i", {}, t.slice(1, -1)) : t), isNew ? "   NEW!" : ""), h("div.ach-desc", {}, a.desc + (a.note ? `   (${a.note})` : ""))),
+          h("div.ach-text", {}, h("div.ach-name", {}, ...richName(a.name), isNew ? "   NEW!" : ""), h("div.ach-desc", {}, a.desc + (a.note ? `   (${a.note})` : ""))),
           h("div.ach-pips", {}, ...a.tiers.map((th, i) => h("span.pip", {}, medal(10, a.tierName(i), i < have), h("small", {}, a.tiers.length > 1 || th > 1 ? th.toLocaleString("en-US") : "")))),
           h("div.ach-prog", {}, h("div", {}, tracker.progressText(a)),
             h("div.bar", {}, h("div", { style: { width: `${frac * 100}%`, background: MEDAL_COLORS[a.tierName(Math.min(have, a.tiers.length - 1))] } })),
@@ -351,9 +423,9 @@ export function achievementsWindow(app, highlight = []) {
     if (await confirmBox("Reset achievements", "Erase ALL achievement progress?\nThis cannot be undone.")) { tracker.reset(); draw(); }
     return false;
   };
-  openWindow({ title: `Achievements - ${app.playerName()}`, width: "min(900px, 96vw)", cls: "tall",
+  openWindow({ title: `Achievements - ${app.playerName()}`, width: "min(900px, 96vw)", cls: "tall.green",
     body: [h("div.row", {}, summary, h("span", { style: { marginLeft: "auto" } }, "Show: "), show), list],
-    buttons: [["Reset achievements...", reset, false, true], ["Close", null, true]] });
+    buttons: [["Reset achievements...", reset, false, true], ["Export achievements", () => { exportAchievements(app); return false; }], ["Close", null, true]] });
 }
 
 // ------------------------------------------------------------- Players & backups
@@ -399,8 +471,8 @@ export function playersWindow(app) {
         }) } }, "Load a backup...")),
       h("p.note", {}, "Stats are kept in this browser. Clearing \"cookies and site data\" erases them, so save a backup now and then. Loading a backup replaces players with the same name and adds new ones.")),
     group("Stats and achievements files",
-      h("div.row", {}, h("button", { on: { click: () => download(store.raw(app.pid).stats || {}, `EytonsCribbage-${safeName()}-stats-${stamp()}.json`) } }, "Export stats"),
-        h("button", { on: { click: () => download(store.raw(app.pid).achievements || { metrics: {}, unlocked: {}, state: {} }, `EytonsCribbage-${safeName()}-achievements-${stamp()}.json`) } }, "Export achievements")),
+      h("div.row", {}, h("button", { on: { click: () => exportStats(app) } }, "Export stats"),
+        h("button", { on: { click: () => exportAchievements(app) } }, "Export achievements")),
       h("p.note", {}, "Import takes these files, or the ones from the Windows (Python) version, which use the same layout. On that PC they're in ",
         h("b", {}, "%USERPROFILE%\\.pycribbage"), " (type that into the file picker's address bar): ",
         h("b", {}, "stats.json"), ", ", h("b", {}, "achievements.json"), " and ", h("b", {}, "settings.json"), ". Pick any of them (Ctrl-click for several); each one replaces that part of this player's data."),
@@ -468,7 +540,7 @@ export function whoWindow(app, { canClose = false } = {}) {
     return false;
   };
   nameIn.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); ev.stopPropagation(); add(); } });
-  const win = openWindow({ title: "Who's playing?", width: 560, cls: canClose ? "" : "locked",
+  const win = openWindow({ title: "Who's playing?", width: "min(560px, 96vw)", cls: canClose ? "who-win" : "who-win.locked", backCls: "green-back",
     body: [list.children.length ? list : h("p", {}, "Welcome! Type your name to make a player. Everyone who plays on this device gets their own stats and achievements."),
       h("div.row", {}, nameIn, h("button.primary", { on: { click: add } }, "Add player")), err, installHelp()],
     buttons: canClose ? [["Cancel", null]] : [] });
@@ -487,7 +559,14 @@ export function aboutWindow() {
   ] });
 }
 
+/** How to Play: the illustrated guide (how-to-play.pdf) in a new tab; it's kept for offline play too. */
 export function helpWindow() {
+  const a = h("a", { href: "how-to-play.pdf", target: "_blank", rel: "noopener" });
+  document.body.append(a); a.click(); a.remove();
+}
+
+/** The old built-in rules window (kept in case the guide can't be opened). */
+export function helpWindowText() {
   const sc = (pairs) => h("table.score", {}, ...pairs.map(([a, b, c, d]) => h("tr", {}, h("td", {}, a), h("td.pts", {}, b), h("td", {}, c || ""), h("td.pts", {}, d || ""))));
   const P = (t) => h("p", { html: t });
   openWindow({ title: "How to Play", width: "min(720px, 96vw)", cls: "tall help", body: [
