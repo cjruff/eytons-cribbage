@@ -154,3 +154,76 @@ td.pic { width: 46px; padding-right: 2px; }
 .photo-btn:disabled .cam { opacity: .25; }
 .win .photo-del, .photo-del { position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; padding: 0; border-radius: 50%; border: 1px solid #8f8774;
   background: #fff; color: #a01818; font-size: 13px; line-height: 15px; cursor: pointer; }
+
+/* ---------- New Game: start screen in the style of Moe's Dominoes ---------- */
+.win-back.setup-back { background: radial-gradient(ellipse at 50% 0%, #1e6a4a 0%, #134832 55%, #0c3324 100%); align-items: flex-start; overflow-y: auto; padding: 70px 0 18px; }
+.win.setup { position: relative; background: linear-gradient(#174f37, #123f2c); color: #efe9d8; border: 2px solid #8a6a3f; border-radius: 18px; box-shadow: 0 18px 50px #0009; max-height: none; overflow: visible; }
+.win.setup .win-title { position: absolute; right: -13px; top: -13px; border: 0; padding: 0; z-index: 2; }
+.win.setup .win-title span { display: none; }
+.win.setup .win-x { width: 30px; height: 30px; padding: 0 !important; border-radius: 50%; border: 2px solid #8a6a3f; background: #123f2c; color: #efe9d8; font-size: 20px; line-height: 24px; }
+.win.setup .win-body { padding: 0 22px 14px; overflow: visible; font-size: 15px; }
+.setup-card { display: flex; flex-direction: column; gap: 10px; }
+.setup-card .hero { width: 150px; height: auto; align-self: center; margin: -78px 0 -4px; filter: drop-shadow(0 6px 10px #0008); }
+.setup-card h1 { margin: 0; text-align: center; font: 700 40px/1.1 Georgia, "Times New Roman", serif; color: #f4ecd6; }
+.setup-card h1 span { color: #d9ae4a; }
+.setup-card .sub { margin: 0 0 4px; text-align: center; color: #cfc7b0; }
+.setup-card .flabel { display: block; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #cfc7b0; margin: 0 0 5px; }
+.setup-card .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.setup-card .seg { display: flex; border: 1px solid #9a7748; border-radius: 9px; overflow: hidden; }
+.win.setup .seg button { flex: 1; border: 0; border-radius: 0; background: transparent; color: #efe9d8; padding: 9px 0; font-size: 16px; }
+.win.setup .seg button + button { border-left: 1px solid #9a7748; }
+.win.setup .seg button.on { background: #d9b04d; color: #1d1a12; font-weight: 700; }
+.win.setup select { width: 100%; height: 40px; padding: 0 10px; border-radius: 9px; border: 1px solid #9a7748; background: #0d3323; color: #efe9d8; font-size: 15px; }
+.win.setup select option, .win.setup select optgroup { background: #fbf7ea; color: #222; }
+.win.setup select optgroup { font-style: normal; font-weight: 700; color: #5e3b1a; }
+.setup-card .cpus { display: flex; flex-direction: column; gap: 8px; }
+.setup-card .prow { display: flex; align-items: center; gap: 8px; }
+.setup-card .prow .opp-pick { flex: 1; min-width: 0; }
+.setup-card .prow .skill { width: 118px; flex: none; }
+.setup-card .me-name { flex: 1; height: 40px; line-height: 40px; padding: 0 12px; border: 1px solid #9a7748; border-radius: 9px; background: #0d3323; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.win.setup button.small { background: transparent; color: #efe9d8; border: 1px solid #9a7748; border-radius: 9px; height: 40px; padding: 0 12px; }
+.win.setup .av { position: relative; width: 42px; height: 42px; flex: none; padding: 0; border-radius: 50%; border: 2px solid #efe6d2; background: #c2563f; overflow: visible; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.win.setup .av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: 50% 28%; }
+.win.setup .av .letter { color: #fff; font-weight: 700; font-size: 18px; }
+.win.setup .av .cam { position: absolute; right: -5px; bottom: -4px; font-size: 13px; background: #1d1a12; border-radius: 50%; padding: 1px 2px; line-height: 1; }
+.win.setup .av:disabled { cursor: default; opacity: 1; background: #efe6d2; }
+.win.setup button.peg { width: 26px; height: 26px; flex: none; padding: 0; border-radius: 50%; border: 2px solid #efe6d2; box-shadow: inset 0 -3px 5px #0005; }
+.setup-card .hint { margin: 0; font-size: 12.5px; color: #cfc7b0; }
+.win.setup button.deal { height: 46px; border-radius: 10px; border: 0; background: #d9b04d; color: #1d1a12; font-size: 19px; font-weight: 700; margin-top: 4px; }
+.win.setup button.deal:hover { background: #e6bf5c; }
+.setup-card .mores { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.win.setup button.more { background: transparent; color: #efe9d8; border: 1px solid #9a7748; border-radius: 9px; height: 38px; padding: 0 6px; font-size: 14.5px; }
+.win.setup button.more:hover, .win.setup button.small:hover { background: #ffffff14; }
+.setup-card .credit { margin: 2px 0 0; text-align: center; font-size: 11.5px; color: #a9a189; }
+@media (max-height: 560px) and (min-width: 640px) {   /* phones held sideways: picture and buttons left, choices right */
+  .win-back.setup-back { padding: 16px 0 8px; align-items: center; }
+  .win.setup { width: min(820px, 96vw) !important; }
+  .win.setup .win-body { padding: 10px 16px 8px; }
+  .setup-card { display: grid; grid-template-columns: 250px 1fr; column-gap: 18px; row-gap: 6px; align-items: start;
+    grid-template-areas: "hero two" "title you" "sub cpus" "deal cpus" "mores cpus" "credit hint"; }
+  .ga-hero { grid-area: hero; } .ga-title { grid-area: title; } .ga-sub { grid-area: sub; } .ga-two { grid-area: two; }
+  .ga-you { grid-area: you; } .ga-cpus { grid-area: cpus; } .ga-hint { grid-area: hint; } .ga-deal { grid-area: deal; }
+  .ga-mores { grid-area: mores; } .ga-credit { grid-area: credit; }
+  .setup-card .hero { width: 84px; margin: 0; justify-self: center; }
+  .setup-card h1 { font-size: 26px; }
+  .setup-card .sub { font-size: 13px; }
+  .setup-card .mores { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .win.setup button.more { font-size: 13px; height: 30px; }
+  .win.setup button.deal { height: 40px; margin: 0; }
+  .win.setup select, .setup-card .me-name, .win.setup button.small { height: 36px; line-height: 34px; }
+  .setup-card .flabel { margin-bottom: 3px; }
+}
+/* other windows opened from the start screen sit on top of it */
+.win-back.setup-back ~ .win-back { z-index: 41; }
+/* opponents you added (Players & Backups) */
+.opp-list { display: flex; flex-direction: column; gap: 6px; }
+.opp-item { display: flex; align-items: center; gap: 10px; }
+.opp-item button { margin-left: auto; }
+.opp-av { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; background: #c2563f; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.opp-av img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 28%; }
+/* install help (Who's playing) */
+details.install { margin-top: 12px; border-top: 1px solid #e0d6bd; padding-top: 8px; }
+details.install summary { cursor: pointer; font-weight: 700; color: #5e3b1a; }
+details.install ul { margin: 6px 0; padding-left: 18px; font-size: 13.5px; }
+details.install li { margin: 4px 0; color: #444; }
+details.install li.here { color: #1b1b1b; }

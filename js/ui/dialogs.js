@@ -87,67 +87,160 @@ function photoButton(app, who) {
 }
 
 // ------------------------------------------------------------- New Game
-/** Game setup: players, each computer's skill, peg colours, board.  start(newSettings) begins the game. */
+export const FAMILY_LABEL = "Rouech / Ruff Family";
+export const PETS_LABEL = "Furry Friends";
+const NEW_OPP = "__new__";
+
+/** Round picture for the setup screen: your photo / an opponent's photo or portrait, or a letter. */
+function avatar(app, name, me = false) {
+  let src = null;
+  if (me) src = app.store.photo(app.pid) || (isPreset(name) ? `assets/portraits/${encodeURIComponent(baseName(name))}.webp` : null);
+  else if (isPreset(name)) src = `assets/portraits/${encodeURIComponent(baseName(name))}.webp`;
+  else src = app.store.opponentPhoto(baseName(name));
+  return src ? h("img", { src, alt: "" }) : h("span.letter", {}, (name || "?").trim().charAt(0).toUpperCase() || "?");
+}
+
+/** Small window: type a new opponent's name, optionally add a photo.  Resolves to the name or null. */
+function newOpponentWindow(app) {
+  return new Promise((res) => {
+    let result = null;
+    const err = h("p.msg", { style: { color: "#a01818" } });
+    const nameIn = h("input", { type: "text", maxlength: 16, placeholder: "Their name", autofocus: true });
+    let photo = null;
+    const pic = h("button.photo-btn", { type: "button", title: "Add a photo (camera, photo library or file)" }, h("span.cam", {}, "\u{1F4F7}"));
+    pic.addEventListener("click", async () => {
+      const { pickPhoto } = await import("../photo.js");
+      const url = await pickPhoto();
+      if (url) { photo = url; pic.replaceChildren(h("img", { src: url, alt: "" })); }
+    });
+    const add = () => {
+      const nm = nameIn.value.trim().slice(0, 16);
+      if (!nm) { err.textContent = "Please type a name."; return false; }
+      const preset = PRESET_OPPONENTS.find((o) => o.toLowerCase() === nm.toLowerCase());
+      if (preset) { result = preset; return; }                    // already one of ours: just pick them
+      const name = app.store.addOpponent(nm);
+      if (photo && !app.store.setOpponentPhoto(baseName(name), photo)) err.textContent = "There isn't room to save that photo.";
+      result = name;
+    };
+    openWindow({ title: "New opponent", width: 400, cls: "on-setup",
+      body: [h("div.row", {}, pic, nameIn), h("p.note", {}, "The photo is optional; tap the box to take one or pick one from your photos or files. Without one they get a silhouette."), err],
+      buttons: [["Cancel", null], ["Add", add, true]], onClose: () => res(result) });
+  });
+}
+
+/** Game setup (looks like Moe's Dominoes' start screen): players, board, opponents, skill, pegs. */
 export function newGameWindow(app, { startup = false } = {}) {
   const s = app.settings;
-  const nameLine = h("div.player-name", {}, app.playerName());
-  const rows = [];
-  const table = h("table.setup", {}, h("tr", {}, ...["", "Player", "Computer skill", "Peg colour", ""].map((t) => h("th", {}, t))));
-  for (let r = 0; r < 3; r++) {
-    const who = r === 0 ? nameLine : h("input", { type: "text", maxlength: 16, value: s.cpu_names[r - 1] || "", placeholder: "(peg colour)" });
-    const pic = photoButton(app, r === 0 ? () => null : () => who.value);
-    const skill = r === 0 ? h("span.dim", {}, "(you)") : select(DIFFICULTIES, s.levels[r - 1]);
-    const colour = select(Object.keys(PEG_PALETTE), s.colors[r]);
-    const swatch = h("span.swatch");
-    rows.push({ who, skill, colour, swatch, pic });
-    table.append(h("tr", {}, h("td.pic", {}, pic), h("td", {}, r === 0 ? who : combo(who, [...FAMILY_OPPONENTS, null, ...PET_OPPONENTS], "New Entry")), h("td", {}, skill), h("td", {}, colour), h("td", {}, swatch)));
-  }
+  const palette = Object.keys(PEG_PALETTE);
   let players = s.players;
-  const refresh = () => {
-    rows.forEach(({ who, skill, colour, swatch, pic }, r) => {
-      const active = r < players;
-      pic.refresh();
-      if (r > 0) {
-        who.disabled = !active;
-        if (!active) pic.querySelectorAll("button").forEach((b) => { b.disabled = true; });
-        const lock = forcedLevel(who.value);               // e.g. Corey: Expert only
-        if (lock) skill.value = lock;
-        for (const opt of skill.options) opt.disabled = !!lock && opt.value !== lock;
-        skill.disabled = !active;
-      }
-      colour.disabled = !active;
-      swatch.style.background = active ? PEG_PALETTE[colour.value] || "#888" : "#dddddd";
-    });
-  };
-  rows.forEach(({ who, colour }, r) => {
-    colour.addEventListener("change", refresh);
-    if (r > 0) { who.addEventListener("input", refresh); who.addEventListener("change", refresh); }
+  const colors = [...s.colors];
+  // opponents: saved choices; a blank (old "peg colour" name) becomes the next free family member
+  const opps = [0, 1].map((i) => (s.cpu_names[i] || "").trim());
+  opps.forEach((nm, i) => {
+    if (nm && !isPreset(nm)) app.store.addOpponent(nm);
+    if (!nm) opps[i] = ["Grandpa", "Grandma", ...FAMILY_OPPONENTS].find((f) => !opps.includes(f));
   });
-  const playersGroup = group("Number of players", radios("ng-players", [[2, "2 players  (you + 1 computer)"], [3, "3 players  (you + 2 computers)"]], s.players, (v) => { players = +v; refresh(); }));
-  const boardGroup = group("Board", radios("ng-board", BOARD_STYLES.map((b) => [b, b]), s.board));
-  const body = [
-    playersGroup,
-    group("Players", table, h("p.note", {}, "Pick family or a furry friend, or type any name; blank = its peg colour.", h("br"),
-      "Tap the picture box to add a photo (camera, photo library or file) for you or anyone you typed in.", h("br"),
-      "Skill only changes how well a computer plays - never the cards.")),
-    boardGroup,
-  ];
-  refresh();
-  const start = () => {
-    const colors = rows.map((r) => r.colour.value);
-    if (new Set(colors.slice(0, players)).size < players) {
-      messageBox("Peg colours", "Please give each player a different peg colour.");
-      return false;
+  const levels = [...s.levels];
+
+  const seg = (values, value, onPick) => {
+    const el = h("div.seg", {}, ...values.map(([v, label]) => h("button" + (String(v) === String(value) ? ".on" : ""), { type: "button",
+      on: { click: (ev) => { el.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b === ev.currentTarget)); onPick(v); } } }, label)));
+    return el;
+  };
+  const field = (label, ...kids) => h("div.field", {}, h("label.flabel", {}, label), ...kids);
+  const peg = (i) => {
+    const b = h("button.peg", { type: "button" });
+    const paint = () => { b.style.background = PEG_PALETTE[colors[i]]; b.title = `${colors[i]} pegs (tap to change)`; };
+    b.addEventListener("click", () => {
+      const used = colors.slice(0, players).filter((_, k) => k !== i);
+      let k = palette.indexOf(colors[i]);
+      do k = (k + 1) % palette.length; while (used.includes(palette[k]));
+      colors[i] = palette[k]; paint();
+    });
+    paint();
+    return b;
+  };
+
+  // your row
+  const myAv = h("button.av", { type: "button", title: "Your photo: tap to take one or pick one" });
+  const paintMe = () => myAv.replaceChildren(avatar(app, app.playerName(), true), h("span.cam", {}, "\u{1F4F7}"));
+  myAv.addEventListener("click", async () => {
+    if (app.store.photo(app.pid) && await confirmBox("Your photo", "Change your photo, or remove it?", "Change", "Remove") === false) app.removePhoto(null);
+    else await app.addPhoto(null);
+    paintMe();
+  });
+  paintMe();
+  const meRow = h("div.prow", {}, myAv, h("div.me-name", {}, app.playerName()),
+    h("button.small", { type: "button", on: { click: () => { win.close(); app.switchPlayer(); } } }, "Switch"), peg(0));
+
+  // computer rows
+  const cpuBox = h("div.cpus");
+  const renderCpus = () => {
+    cpuBox.replaceChildren();
+    for (let i = 0; i < players - 1; i++) {
+      const taken = opps.filter((_, k) => k !== i && k < players - 1).map((x) => x.toLowerCase());
+      const opt = (nm) => h("option", { value: nm, selected: nm === opps[i], disabled: taken.includes(nm.toLowerCase()) }, nm);
+      const custom = app.store.opponents();
+      const who = h("select.opp-pick", { "aria-label": `Computer player ${i + 1}` },
+        h("option", { value: NEW_OPP }, "+ Create New Opponent"),
+        ...custom.map(opt),
+        h("optgroup", { label: `── ${FAMILY_LABEL} ──` }, ...FAMILY_OPPONENTS.map(opt)),
+        h("optgroup", { label: `── ${PETS_LABEL} ──` }, ...PET_OPPONENTS.map(opt)));
+      who.addEventListener("change", async () => {
+        if (who.value === NEW_OPP) {
+          const nm = await newOpponentWindow(app);
+          if (nm && !opps.some((o, k) => k !== i && o.toLowerCase() === nm.toLowerCase())) opps[i] = nm;
+        } else opps[i] = who.value;
+        renderCpus();
+      });
+      const lock = forcedLevel(opps[i]);                         // Corey: Expert only
+      if (lock) levels[i] = lock;
+      const skill = h("select.skill", { "aria-label": "Skill", on: { change: (ev) => { levels[i] = ev.target.value; } } },
+        ...DIFFICULTIES.map((d) => h("option", { value: d, selected: d === levels[i], disabled: !!lock && d !== lock }, d)));
+      const av = h("button.av", { type: "button" }, avatar(app, opps[i]));
+      if (isPreset(opps[i])) { av.disabled = true; av.title = opps[i]; }
+      else {
+        av.append(h("span.cam", {}, "\u{1F4F7}"));
+        av.title = `Photo for ${opps[i]}: tap to change`;
+        av.addEventListener("click", async () => {
+          if (app.store.opponentPhoto(baseName(opps[i])) && await confirmBox(`${opps[i]}'s photo`, "Change the photo, or remove it?", "Change", "Remove") === false) app.removePhoto(opps[i]);
+          else await app.addPhoto(opps[i]);
+          renderCpus();
+        });
+      }
+      cpuBox.append(h("div.prow", {}, av, who, skill, peg(i + 1)));
     }
-    const spare = Object.keys(PEG_PALETTE).filter((c) => !colors.slice(0, players).includes(c));
-    const cpu = rows.slice(1).map((r) => r.who.value.trim().slice(0, 16));
-    const levels = rows.slice(1).map((r, i) => forcedLevel(cpu[i]) || r.skill.value);
-    const next = { ...s, players, levels, colors: [...colors.slice(0, players), ...spare.slice(0, 3 - players)],
-      board: radioValue(win.el, "ng-board"), cpu_names: cpu, difficulty: levels[0] };
+  };
+  renderCpus();
+
+  const board = h("select", { "aria-label": "Board" }, ...BOARD_STYLES.map((b) => h("option", { value: b, selected: b === s.board }, b)));
+  const deal = () => {
+    const used = colors.slice(0, players);
+    if (new Set(used).size < used.length) { messageBox("Peg colours", "Please give each player a different peg colour."); return; }
+    const spare = palette.filter((c) => !used.includes(c));
+    const lv = opps.map((nm, i) => forcedLevel(nm) || levels[i]);
+    const next = { ...s, players, levels: lv, colors: [...used, ...spare.slice(0, 3 - players)], board: board.value, cpu_names: [...opps], difficulty: lv[0] };
     win.close();
     app.startGame(next);
   };
-  const win = openWindow({ title: "New Game", width: 600, body, buttons: [["Cancel", null], ["Start Game", start, true]],
+  const more = (label, fn) => h("button.more", { type: "button", on: { click: fn } }, label);
+  const body = h("div.setup-card", {},
+    h("img.hero.ga-hero", { src: "assets/eyton-setup.webp", alt: "Eyton, a cat holding cards at a cribbage board" }),
+    h("h1.ga-title", {}, "Eyton's ", h("span", {}, "Cribbage")),
+    h("p.sub.ga-sub", {}, "2 or 3 players · first to 121"),
+    h("div.two.ga-two", {},
+      field("Players", seg([[2, "2"], [3, "3"]], players, (v) => { players = +v; renderCpus(); })),
+      field("Board", board)),
+    h("div.ga-you", {}, field("You", meRow)),
+    h("div.ga-cpus", {}, field("Computer players", cpuBox)),
+    h("p.hint.ga-hint", {}, "Skill only changes how well a computer plays, never the cards. Tap a peg to change its colour."),
+    h("button.deal.ga-deal", { type: "button", on: { click: deal } }, "Deal"),
+    h("div.mores.ga-mores", {},
+      more("Achievements", () => achievementsWindow(app, [])), more("Stats", () => statsWindow(app)),
+      more("Settings", () => settingsWindow(app)), more("Players", () => playersWindow(app)),
+      more("How to Play", () => helpWindow()), more("About", () => aboutWindow())),
+    h("p.credit.ga-credit", {}, "Code: © Corey J Ruff"));
+  const win = openWindow({ title: "New Game", width: "min(560px, 96vw)", cls: "setup", backCls: "setup-back", body, buttons: [],
     onClose: () => { if (startup) app.table.requestRedraw(); } });
   return win;
 }
@@ -293,6 +386,7 @@ export function playersWindow(app) {
           win.close(); app.deletePlayer();
         }
       } } }, "Delete player..."))),
+    opponentsGroup(app),
     group("Backups (moving to another device or browser)",
       h("div.row", {}, h("button", { on: { click: () => download(store.exportBackup([app.pid]), `EytonsCribbage-${app.playerName().replace(/[^\w-]+/g, "_")}-${stamp()}.json`) } }, "Save this player to a file"),
         h("button", { on: { click: () => download(store.exportBackup(), `EytonsCribbage-everyone-${stamp()}.json`) } }, "Save everyone to a file"),
@@ -325,6 +419,39 @@ export function playersWindow(app) {
   const win = openWindow({ title: "Players & Backups", width: 620, body, buttons: [["Close", null, true]] });
 }
 
+function opponentsGroup(app) {
+  const box = h("div.opp-list");
+  const fill = () => {
+    const all = app.store.opponents();
+    box.replaceChildren(...(all.length ? all.map((nm) => h("div.opp-item", {}, h("span.opp-av", {}, avatar(app, nm)), h("span", {}, nm),
+      h("button", { on: { click: async () => {
+        if (await confirmBox("Remove opponent", `Take ${nm} off the opponent list?  (Their games stay in your stats.)`)) { app.store.removeOpponent(nm); fill(); }
+      } } }, "Remove"))) : [h("p.note", {}, "None yet. Pick \"+ Create New Opponent\" on the New Game screen to add one.")]));
+  };
+  fill();
+  return group("Opponents you added", box);
+}
+
+/** How to put the game on a home screen / desktop (shown on the Who's playing window). */
+function installHelp() {
+  const ua = navigator.userAgent;
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  if (standalone) return h("p.note", {}, "You're using the installed version - nice. Your players, stats and achievements stay on this device; nothing is sent to the developer.");
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(ua);
+  const how = [
+    ["iPhone / iPad (Safari)", ios, "Tap the Share button (the square with an arrow; on newer iPhones it's inside the ••• menu), then Add to Home Screen, then Add."],
+    ["Android (Chrome)", android, "Tap the ⋮ menu at the top right, then Add to Home screen (or Install app), then Install."],
+    ["Windows / Mac computer", !ios && !android, "Chrome: click the install icon at the right end of the address bar (a screen with a down arrow), or ⋮ menu > Cast, save and share > Install page as app. Edge: ⋯ menu > Apps > Install this site as an app. Safari on a Mac: File > Add to Dock."],
+  ];
+  how.sort((a, b) => b[1] - a[1]);
+  return h("details.install", { open: true },
+    h("summary", {}, "For the best experience, add it to your home screen or desktop"),
+    h("p.note", {}, "It then opens full screen in its own window, like an app, and works without internet. This isn't an app-store install: it's a shortcut to this web page, so nothing extra is put on your device. Your players, stats and achievements are saved only on this device, and nothing is shared with the developer."),
+    h("ul", {}, ...how.map(([who, here, txt]) => h("li" + (here ? ".here" : ""), {}, h("b", {}, who + (here ? " (this device)" : "") + ": "), txt))),
+    h("p.note", {}, "Tip: clearing this site's \"cookies and site data\" erases stats. Players & Backups can save a copy."));
+}
+
 // ------------------------------------------------------------- Who's playing
 export function whoWindow(app, { canClose = false } = {}) {
   const err = h("p.msg", { style: { color: "#a01818" } });
@@ -343,7 +470,7 @@ export function whoWindow(app, { canClose = false } = {}) {
   nameIn.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); ev.stopPropagation(); add(); } });
   const win = openWindow({ title: "Who's playing?", width: 560, cls: canClose ? "" : "locked",
     body: [list.children.length ? list : h("p", {}, "Welcome! Type your name to make a player. Everyone who plays on this device gets their own stats and achievements."),
-      h("div.row", {}, nameIn, h("button.primary", { on: { click: add } }, "Add player")), err],
+      h("div.row", {}, nameIn, h("button.primary", { on: { click: add } }, "Add player")), err, installHelp()],
     buttons: canClose ? [["Cancel", null]] : [] });
   if (!canClose) win.el.querySelector(".win-x").remove();
   return win;
@@ -366,7 +493,7 @@ export function helpWindow() {
   openWindow({ title: "How to Play", width: "min(720px, 96vw)", cls: "tall help", body: [
     h("h3", {}, "Goal"), P("Be first to peg <b>121</b> points."),
     h("h3", {}, "New game (F2)"), P("Choose 2 or 3 players, a skill level for each computer, everyone's peg colour, and the board. With mixed skill levels, stats are filed under the strongest one."),
-    P("Opponents can be family, our furry friends (Eyton, Morgan, Nala, Rhys and Wally - they play, but they don't talk), or any name you type. Tap the picture box beside a player to add a photo from the camera, your photo library or a file. Family and pets keep their own pictures."),
+    P("Opponents can be the family, our furry friends (Eyton, Morgan, Nala, Rhys and Wally - they play, but they don't talk), or anyone you add with \"+ Create New Opponent\". Tap the round picture beside you or someone you added to take a photo or pick one from your photos or files. Family and pets keep their own pictures. Tap a peg to change its colour. Players &amp; Backups lists the opponents you added, so you can remove them."),
     h("h3", {}, "Cut for deal"), P("Click any card in the face-down spread, then each computer cuts. Low card deals (ace is low). A tie means everyone cuts again."),
     h("h3", {}, "The deal"), P("<b>2 players:</b> 6 cards each, discard 2 to the crib.<br><b>3 players:</b> 5 cards each, one card goes straight to the crib, each player discards 1.<br>The crib belongs to the dealer. The deal rotates every hand. Tap cards to choose them (or drag them up), then press the Send button."),
     h("h3", {}, "The starter"), P('After discards the deck is cut and a starter card turned up. If it is a Jack the dealer pegs 2 ("His Heels").'),

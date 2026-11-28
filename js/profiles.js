@@ -112,6 +112,24 @@ export class ProfileStore {
     };
   }
 
+  // ----- opponents you added (shared by everyone on this device) -----
+  opponents() { const v = this._read("opponents"); return Array.isArray(v) ? v.filter((x) => typeof x === "string") : []; }
+  /** Add a typed-in opponent (keeps the first spelling); returns the name as stored. */
+  addOpponent(name) {
+    const nm = String(name).trim().slice(0, 16);
+    const all = this.opponents();
+    const have = all.find((x) => x.toLowerCase() === nm.toLowerCase());
+    if (have || !nm) return have || nm;
+    all.push(nm);
+    all.sort((a, b) => a.localeCompare(b));
+    this._write("opponents", all);
+    return nm;
+  }
+  removeOpponent(name) {
+    this._write("opponents", this.opponents().filter((x) => x.toLowerCase() !== name.toLowerCase()));
+    this.setOpponentPhoto(name.toLowerCase(), null);
+  }
+
   // ----- photos -----
   /** This player's own photo (data URL) or null. */
   photo(id) { const v = this._read(`${id}.photo`); return typeof v === "string" ? v : null; }
@@ -140,6 +158,7 @@ export class ProfileStore {
       app: APP_ID, version: BACKUP_VERSION, exported: new Date().toISOString(),
       profiles: chosen.map((p) => { const photo = this.photo(p.id); return { name: p.name, created: p.created, ...this.raw(p.id), ...(photo ? { photo } : {}) }; }),
       photos: this.opponentPhotos(),
+      opponents: this.opponents(),
     };
   }
 
@@ -152,6 +171,7 @@ export class ProfileStore {
       throw new Error("That file isn't an Eyton's Cribbage backup.");
     }
     const report = [];
+    if (Array.isArray(obj.opponents)) for (const o of obj.opponents) if (typeof o === "string") this.addOpponent(o);
     if (obj.photos && typeof obj.photos === "object") {
       for (const [k, v] of Object.entries(obj.photos)) if (typeof v === "string" && v.startsWith("data:image/")) this.setOpponentPhoto(k, v);
     }

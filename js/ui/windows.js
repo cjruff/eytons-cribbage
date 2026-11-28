@@ -29,8 +29,8 @@ export const windowOpen = () => stack.length > 0;
  * Open a modal window.  opts: { title, width, body: Element|[Element], buttons: [[label, fn, primary]],
  * onClose, wide }.  Returns { el, close }.  A button fn returning false keeps the window open.
  */
-export function openWindow({ title, width = 460, body, buttons = [["OK", null, true]], onClose = null, cls = "" }) {
-  const back = h("div.win-back");
+export function openWindow({ title, width = 460, body, buttons = [["OK", null, true]], onClose = null, cls = "", backCls = "" }) {
+  const back = h("div.win-back" + (backCls ? "." + backCls : ""));
   const content = h("div.win-body");
   content.append(...[].concat(body));
   const win = h("div.win" + (cls ? "." + cls : ""), { role: "dialog", "aria-label": title, style: { width: typeof width === "number" ? width + "px" : width } },
@@ -53,7 +53,7 @@ export function openWindow({ title, width = 460, body, buttons = [["OK", null, t
   const api = { el: win, body: content, close };
   stack.push(api);
   back.addEventListener("pointerdown", (ev) => { if (ev.target === back) win.classList.add("nudge"), setTimeout(() => win.classList.remove("nudge"), 200); });
-  setTimeout(() => (win.querySelector("[autofocus]") || win.querySelector(".win-buttons .primary") || win).focus(), 20);
+  setTimeout(() => (win.querySelector("[autofocus]") || win.querySelector(".win-buttons .primary") || win).focus({ preventScroll: true }), 20);
   win.tabIndex = -1;
   return api;
 }
