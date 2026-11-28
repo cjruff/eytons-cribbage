@@ -559,10 +559,31 @@ export function aboutWindow() {
   ] });
 }
 
-/** How to Play: the illustrated guide (how-to-play.pdf) in a new tab; it's kept for offline play too. */
+/**
+ * How to Play: the illustrated guide, shown inside the game as page pictures
+ * (assets/howto/page-NN.webp, made from how-to-play.pdf) so there's always a way back.
+ * Opening the PDF in a new tab trapped the installed (Home Screen) app with no Back button.
+ */
+export const HOWTO_PAGES = 17;
 export function helpWindow() {
-  const a = h("a", { href: "how-to-play.pdf", target: "_blank", rel: "noopener" });
-  document.body.append(a); a.click(); a.remove();
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const pages = Array.from({ length: HOWTO_PAGES }, (_, i) => {
+    const n = String(i + 1).padStart(2, "0");
+    return h("img.howto-page", { src: `assets/howto/page-${n}.webp`, alt: `How to Play, page ${i + 1}`, loading: i < 2 ? "eager" : "lazy", decoding: "async" });
+  });
+  const pdf = standalone ? null : h("a.howto-pdf.left", { href: "how-to-play.pdf", target: "_blank", rel: "noopener" }, "Open as PDF");
+  const win = openWindow({ title: "How to Play", width: "min(860px, 98vw)", cls: "howto", backCls: "green-back.howto-back",
+    body: [h("p.howto-tip", {}, "Tap a page to zoom in or out."),
+      h("div.howto-pages", { on: { click: (ev) => {               // the game turns off pinch-zoom, so tap to zoom instead
+        const img = ev.target.closest(".howto-page"); if (!img) return;
+        const box = win.body, pagesEl = ev.currentTarget, zoomed = !pagesEl.classList.contains("zoomed");
+        const fx = ev.offsetX / img.clientWidth, fy = (img.offsetTop + ev.offsetY) / pagesEl.scrollHeight;
+        pagesEl.classList.toggle("zoomed", zoomed);
+        box.scrollTop = fy * pagesEl.scrollHeight - box.clientHeight / 2;
+        box.scrollLeft = zoomed ? fx * img.clientWidth - box.clientWidth / 2 : 0;
+      } } }, ...pages)], buttons: [["Close", null, true]] });
+  if (pdf) win.el.querySelector(".win-buttons").prepend(pdf);   // in a browser tab the PDF is still offered (left side)
+  return win;
 }
 
 /** The old built-in rules window (kept in case the guide can't be opened). */
